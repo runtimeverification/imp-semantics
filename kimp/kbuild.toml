@@ -1,0 +1,16 @@
+[project]
+name = "imp-semantics"
+version = "0.1.0"
+source = "k-src"
+
+[targets.llvm]
+backend = "llvm"
+main-file = "imp.k"
+main-module = "IMP"
+syntax-module = "IMP-SYNTAX"
+
+[targets.haskell]
+backend = "haskell"
+main-file = "imp-verification.k"
+main-module = "IMP-VERIFICATION"
+syntax-module = "IMP-VERIFICATION-SYNTAX"
