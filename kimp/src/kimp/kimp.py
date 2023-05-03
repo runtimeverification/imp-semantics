@@ -12,7 +12,9 @@ from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Iterable, Optional, Union, final
 
 from pyk.cli_utils import check_dir_path, check_file_path
+from pyk.cterm import CTerm
 from pyk.kast.inner import KApply, KInner, KSequence, KVariable
+from pyk.kast.manip import anti_unify_with_constraints
 from pyk.kcfg.explore import KCFGExplore
 from pyk.kcfg.kcfg import KCFG
 from pyk.kcfg.show import KCFGShow
@@ -29,7 +31,6 @@ from pyk.proof.utils import read_proof
 if TYPE_CHECKING:
     from subprocess import CompletedProcess
 
-    from pyk.cterm import CTerm
     from pyk.ktool.kprint import SymbolTable
 
 
@@ -254,6 +255,62 @@ class KIMP:
                 cut_point_rules=['IMP.while'],
                 # terminal_rules='IMP.while',
             )
+
+        proof.write_proof()
+        print(proof.status)
+
+    def summarize(
+        self,
+        spec_file: str,
+        spec_module: str,
+        claim_id: str,
+        max_iterations: int,
+        # max_depth: int,
+        # terminal_rules: Iterable[str],
+        # cut_rules: Iterable[str],
+        # proof_status: ProofStatus,
+    ) -> None:
+        claims = self.kprove.get_claims(
+            Path(spec_file),
+            spec_module_name=spec_module,
+            claim_labels=[f'{spec_module}.{claim_id}'],
+            include_dirs=[self.haskell_dir.parent.parent.parent / 'include' / 'imp-semantics'],
+        )
+        assert len(claims) == 1
+
+        kcfg = KCFG.from_claim(self.kprove.definition, claims[0])
+        proof = APRProof(f'{spec_module}.{claim_id}', kcfg, proof_dir=self.proof_dir)
+        prover = APRProver(proof, is_terminal=KIMP._is_terminal, extract_branches=self._extract_branches)
+        with KCFGExplore(
+            self.kprove,
+            id=f'{spec_module}.{claim_id}',
+        ) as kcfg_explore:
+            iterations = 0
+            checked_nodes = []
+            while iterations < max_iterations and kcfg.frontier:
+                next_node = kcfg.frontier[0]
+                if next_node not in checked_nodes:
+                    checked_nodes.append(next_node)
+                    prior_loops_on_path = [
+                        node
+                        for node in proof.kcfg.reachable_nodes(next_node.id, reverse=True, traverse_covers=True)
+                        if node != next_node and self._same_loop(next_node.cterm, node.cterm)
+                    ]
+                    if len(prior_loops_on_path) > 0:
+                        generalized_term = next_node.cterm.kast
+                        for node in prior_loops_on_path:
+                            generalized_term = anti_unify_with_constraints(generalized_term, node.cterm.kast)
+                        cover_node = proof.kcfg.create_node(CTerm.from_kast(generalized_term))
+                        proof.kcfg.create_cover(next_node.id, cover_node.id)
+                        continue
+                    else:
+                        kcfg = prover.advance_proof(
+                            kcfg_explore,
+                            max_iterations=1,
+                            # execute_depth=1,
+                            cut_point_rules=['IMP.while'],
+                            # terminal_rules='IMP.while',
+                        )
 
         proof.write_proof()
         print(proof.status)

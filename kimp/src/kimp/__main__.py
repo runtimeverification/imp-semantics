@@ -96,6 +96,30 @@ def exec_prove(
             raise
 
 
+def exec_summarizer(
+    definition_dir: str,
+    spec_file: str,
+    spec_module: str,
+    claim_id: str,
+    max_iterations: int = 20,
+    ignore_return_code: bool = False,
+    # output: str = 'none',
+    **kwargs: Any,
+) -> None:
+    kimp = KIMP(definition_dir, definition_dir)
+
+    try:
+        kimp.summarize(spec_file=spec_file, spec_module=spec_module, claim_id=claim_id, max_iterations=max_iterations)
+    except RuntimeError as err:
+        if ignore_return_code:
+            msg, stdout, stderr = err.args
+            print(stdout)
+            print(stderr)
+            print(msg)
+        else:
+            raise
+
+
 def exec_bmc_prove(
     definition_dir: str,
     spec_file: str,
