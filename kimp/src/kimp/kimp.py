@@ -301,7 +301,7 @@ class KIMP:
                     prior_loops_on_path = [
                         node
                         for node in proof.kcfg.reachable_nodes(next_node.id, reverse=True, traverse_covers=True)
-                        if node != next_node and self._same_loop(next_node.cterm, node.cterm)
+                        if node != next_node and self._same_loop(next_node.cterm, node.cterm) and not next_node.cterm.match_with_constraint(node.cterm)
                     ]
                     if len(prior_loops_on_path) > 0:
                         _LOGGER.info(
