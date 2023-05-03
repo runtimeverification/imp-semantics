@@ -735,8 +735,8 @@ tomli = "^2.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/runtimeverification/pyk.git"
-reference = "v0.1.272"
-resolved_reference = "b066b729e639731d65f05cd0434facca172152c4"
+reference = "subproofs"
+resolved_reference = "3b602b2bde5111ad6382e8873d9297763cf6a761"
 
 [[package]]
 name = "pyperclip"
@@ -963,4 +963,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "2f7592cb8eb52887aae39442b78100d6520b38bad5d83f090f7f96a8c829592d"
+content-hash = "d63b0037812993bef8238cb3dec1c4a4f3c2abd5ffc969011dc5683ab0dd6130"
