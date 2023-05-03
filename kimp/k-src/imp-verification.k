@@ -8,13 +8,10 @@ module IMP-VERIFICATION-SYNTAX
                 | "$m" [token]
 endmodule
 
+
 module IMP-VERIFICATION
     imports IMP-VERIFICATION-SYNTAX
     imports IMP
-
-    syntax KItem ::= "#FINISH"
-
-    rule [halt]: <k> #FINISH => . ... </k>
 
     // inequality sign normalization
     rule          A  >Int B  => B  <Int A [simplification]
