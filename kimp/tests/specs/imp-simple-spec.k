@@ -16,6 +16,9 @@ module IMP-SIMPLE-SPEC
                        <state> $n |-> (0 => ?N) </state>
                        ensures ?N ==Int 5 orBool ?N ==Int 6
 
+    claim [branching-program]: <k> $n = 7 ; if (B:Bool) { $n = 6 ; } else { $n = 5 ; } => . ... </k>
+                               <state> _ => ?_ </state>
+
     claim [branching-deadcode]: <k> $n = 7 ; if (B:Bool) { $n = 6 ; } else { if (! B:Bool) { $n = 5 ; } else { $n = 4 ; } } => . ... </k>
                                 <state> $n |-> (0 => ?N) </state>
                                 ensures ?N ==Int 5 orBool ?N ==Int 6
