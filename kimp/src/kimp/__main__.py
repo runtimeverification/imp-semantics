@@ -181,10 +181,11 @@ def exec_show_kcfg(
     spec_module: str,
     claim_id: str,
     to_module: bool = False,
+    inline_nodes: bool = False,
     **kwargs: Any,
 ) -> None:
     kimp = KIMP(definition_dir, definition_dir)
-    kimp.show_kcfg(spec_file, spec_module, claim_id, to_module=to_module)
+    kimp.show_kcfg(spec_file, spec_module, claim_id, to_module=to_module, inline_nodes=inline_nodes)
 
 
 def exec_view_kcfg(
@@ -424,6 +425,12 @@ def create_argument_parser() -> ArgumentParser:
         default=False,
         action='store_true',
         help='Display a K module containing the KCFG thus far.',
+    )
+    kcfg_show_subparser.add_argument(
+        '--inline-nodes',
+        default=False,
+        action='store_true',
+        help='Display states inline with KCFG nodes.',
     )
 
     # KCFG to dot

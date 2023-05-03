@@ -334,6 +334,7 @@ class KIMP:
         spec_module: str,
         claim_id: str,
         to_module: bool = False,
+        inline_nodes: bool = False,
         # save_directory: Path | None = None,
         # includes: Iterable[str] = (),
         # claim_labels: Iterable[str] = (),
@@ -346,6 +347,11 @@ class KIMP:
         # minimize: bool = True,
         **kwargs: Any,
     ) -> None:
+        def _node_printer(cterm: CTerm) -> Iterable[str]:
+            return self.kprove.pretty_print(cterm.kast).split('\n')
+
+        node_printer = _node_printer if inline_nodes else None
+
         proof = read_proof(f'{spec_module}.{claim_id}', proof_dir=self.proof_dir)
         if type(proof) == EqualityProof:
             raise ValueError(f'Cannot show KCFG of EqualityProof {proof.id}')
@@ -355,6 +361,7 @@ class KIMP:
             proof.id,
             proof.kcfg,
             to_module=to_module,
+            node_printer=node_printer,
             # nodes=nodes,
             # node_deltas=node_deltas,
             # minimize=minimize,
