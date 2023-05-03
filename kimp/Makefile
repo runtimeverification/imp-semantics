@@ -12,13 +12,16 @@ clean:
 	find -type d -name __pycache__ -prune -exec rm -rf {} \;
 
 .PHONY: build
-build:
-	$(POETRY) build
+build: kbuild-imp
 
 .PHONY: poetry-install
 poetry-install:
 	$(POETRY) install
 
+.PHONY: kbuild-imp
+kbuild-imp: poetry-install
+	$(POETRY) run kbuild kompile llvm
+	$(POETRY) run kbuild kompile haskell
 
 # Tests
 
