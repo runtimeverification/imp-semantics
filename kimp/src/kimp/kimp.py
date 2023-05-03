@@ -226,7 +226,7 @@ class KIMP:
         spec_file: str,
         spec_module: str,
         claim_id: str,
-        # max_iterations: int,
+        max_iterations: int,
         # max_depth: int,
         # terminal_rules: Iterable[str],
         # cut_rules: Iterable[str],
@@ -249,7 +249,7 @@ class KIMP:
         ) as kcfg_explore:
             kcfg = prover.advance_proof(
                 kcfg_explore,
-                max_iterations=20,
+                max_iterations=max_iterations,
                 # execute_depth=1,
                 cut_point_rules=['IMP.while'],
                 # terminal_rules='IMP.while',

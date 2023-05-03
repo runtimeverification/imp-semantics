@@ -77,14 +77,15 @@ def exec_prove(
     spec_file: str,
     spec_module: str,
     claim_id: str,
-    # output: str = 'none',
+    max_iterations: int = 20,
     ignore_return_code: bool = False,
+    # output: str = 'none',
     **kwargs: Any,
 ) -> None:
     kimp = KIMP(definition_dir, definition_dir)
 
     try:
-        kimp.prove(spec_file=spec_file, spec_module=spec_module, claim_id=claim_id)
+        kimp.prove(spec_file=spec_file, spec_module=spec_module, claim_id=claim_id, max_iterations=max_iterations)
     except RuntimeError as err:
         if ignore_return_code:
             msg, stdout, stderr = err.args
@@ -309,6 +310,12 @@ def create_argument_parser() -> ArgumentParser:
         'claim_id',
         type=str,
         help='Claim id',
+    )
+    prove_subparser.add_argument(
+        '--max-iterations',
+        type=int,
+        default=20,
+        help='Maximum number of iterations to run prover for.',
     )
 
     # BMC Prove
