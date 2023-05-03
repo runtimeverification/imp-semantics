@@ -21,7 +21,7 @@ prove() {
     poetry_run kimp prove --definition $(haskell_target) ${verbose} ${spec_file} ${spec_module} ${spec_id} "$@"
 }
 
-show() {
+summarize() {
     poetry_run kimp summarize --definition $(haskell_target) ${verbose} ${spec_file} ${spec_module} ${spec_id} "$@"
 }
 
@@ -40,5 +40,6 @@ spec_id=sum-spec
 spec_id=two-sum-spec
 
 build
-prove --max-iterations 10
+# prove --max-iterations 10
+summarize --max-iterations 20
 show --to-module --inline-nodes
