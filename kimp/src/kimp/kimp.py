@@ -333,6 +333,7 @@ class KIMP:
         spec_file: str,
         spec_module: str,
         claim_id: str,
+        to_module: bool = False,
         # save_directory: Path | None = None,
         # includes: Iterable[str] = (),
         # claim_labels: Iterable[str] = (),
@@ -353,9 +354,9 @@ class KIMP:
         res_lines = kcfg_show.show(
             proof.id,
             proof.kcfg,
+            to_module=to_module,
             # nodes=nodes,
             # node_deltas=node_deltas,
-            # to_module=to_module,
             # minimize=minimize,
             # node_printer=kevm.short_info,
         )

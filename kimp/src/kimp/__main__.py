@@ -179,10 +179,11 @@ def exec_show_kcfg(
     spec_file: str,
     spec_module: str,
     claim_id: str,
+    to_module: bool = False,
     **kwargs: Any,
 ) -> None:
     kimp = KIMP(definition_dir, definition_dir)
-    kimp.show_kcfg(spec_file, spec_module, claim_id)
+    kimp.show_kcfg(spec_file, spec_module, claim_id, to_module=to_module)
 
 
 def exec_view_kcfg(
@@ -410,6 +411,12 @@ def create_argument_parser() -> ArgumentParser:
         'claim_id',
         type=str,
         help='Claim id',
+    )
+    kcfg_show_subparser.add_argument(
+        '--to-module',
+        default=False,
+        action='store_true',
+        help='Display a K module containing the KCFG thus far.',
     )
 
     # KCFG to dot
