@@ -343,6 +343,36 @@ def create_argument_parser() -> ArgumentParser:
         help='Maximum number of iterations to run prover for.',
     )
 
+    # Summarize
+    summarize_subparser = command_parser.add_parser('summarize', help='Prove a K claim', parents=[shared_args])
+    summarize_subparser.add_argument(
+        '--definition-dir',
+        dest='definition_dir',
+        type=dir_path,
+        help='Path to Haskell definition to use.',
+    )
+    summarize_subparser.add_argument(
+        'spec_file',
+        type=file_path,
+        help='Path to .k file',
+    )
+    summarize_subparser.add_argument(
+        'spec_module',
+        type=str,
+        help='Spec main module',
+    )
+    summarize_subparser.add_argument(
+        'claim_id',
+        type=str,
+        help='Claim id',
+    )
+    summarize_subparser.add_argument(
+        '--max-iterations',
+        type=int,
+        default=20,
+        help='Maximum number of iterations to run summarizer for.',
+    )
+
     # BMC Prove
     bmc_prove_subparser = command_parser.add_parser(
         'bmc-prove', help='Prove a K claim with the Bounded Model-Checker', parents=[shared_args]

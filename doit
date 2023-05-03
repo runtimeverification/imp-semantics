@@ -22,6 +22,10 @@ prove() {
 }
 
 show() {
+    poetry_run kimp summarize --definition $(haskell_target) ${verbose} ${spec_file} ${spec_module} ${spec_id} "$@"
+}
+
+show() {
     poetry_run kimp show-kcfg --definition $(haskell_target) ${verbose} ${spec_file} ${spec_module} ${spec_id} "$@"
 }
 
@@ -30,6 +34,11 @@ spec_module=IMP-SIMPLE-SPEC
 # spec_id=branching
 spec_id=branching-deadcode
 
+spec_file=tests/specs/imp-sum-spec.k
+spec_module=IMP-SUM-SPEC
+spec_id=sum-spec
+spec_id=two-sum-spec
+
 build
-prove
-show --to-module
+prove --max-iterations 10
+show --to-module --inline-nodes

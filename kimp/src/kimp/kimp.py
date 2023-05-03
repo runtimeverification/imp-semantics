@@ -3,6 +3,7 @@ from __future__ import annotations
 __all__ = ['KIMP']
 
 import json
+import logging
 import subprocess
 from dataclasses import dataclass
 from functools import cached_property
@@ -27,11 +28,15 @@ from pyk.prelude.ml import mlEqualsTrue
 from pyk.proof.equality import EqualityProof, EqualityProver
 from pyk.proof.reachability import APRBMCProof, APRBMCProver, APRProof, APRProver
 from pyk.proof.utils import read_proof
+from pyk.utils import shorten_hashes
 
 if TYPE_CHECKING:
     from subprocess import CompletedProcess
+    from typing import Final
 
     from pyk.ktool.kprint import SymbolTable
+
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 @final
@@ -290,6 +295,7 @@ class KIMP:
             while iterations < max_iterations and kcfg.frontier:
                 next_node = kcfg.frontier[0]
                 if next_node not in checked_nodes:
+                    _LOGGER.info(f'Checking for loops: {shorten_hashes(next_node.id)}')
                     checked_nodes.append(next_node)
                     prior_loops_on_path = [
                         node
@@ -297,20 +303,23 @@ class KIMP:
                         if node != next_node and self._same_loop(next_node.cterm, node.cterm)
                     ]
                     if len(prior_loops_on_path) > 0:
+                        _LOGGER.info(
+                            f'Loops found: {shorten_hashes(next_node.id)} -> {shorten_hashes(nd.id for nd in prior_loops_on_path)}'
+                        )
                         generalized_term = next_node.cterm.kast
                         for node in prior_loops_on_path:
                             generalized_term = anti_unify_with_constraints(generalized_term, node.cterm.kast)
                         cover_node = proof.kcfg.create_node(CTerm.from_kast(generalized_term))
                         proof.kcfg.create_cover(next_node.id, cover_node.id)
                         continue
-                    else:
-                        kcfg = prover.advance_proof(
-                            kcfg_explore,
-                            max_iterations=1,
-                            # execute_depth=1,
-                            cut_point_rules=['IMP.while'],
-                            # terminal_rules='IMP.while',
-                        )
+                else:
+                    kcfg = prover.advance_proof(
+                        kcfg_explore,
+                        max_iterations=1,
+                        # execute_depth=1,
+                        cut_point_rules=['IMP.while'],
+                        # terminal_rules='IMP.while',
+                    )
 
         proof.write_proof()
         print(proof.status)
