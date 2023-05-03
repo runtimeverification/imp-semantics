@@ -13,6 +13,10 @@ haskell_target() {
     poetry run kbuild which haskell
 }
 
+build() {
+    poetry_run kbuild kompile haskell "$@"
+}
+
 prove() {
     poetry_run kimp prove --definition $(haskell_target) ${verbose} ${spec_file} ${spec_module} ${spec_id} "$@"
 }
@@ -26,5 +30,6 @@ spec_module=IMP-SIMPLE-SPEC
 # spec_id=branching
 spec_id=branching-deadcode
 
+build
 prove
 show --to-module
