@@ -293,6 +293,7 @@ class KIMP:
             iterations = 0
             checked_nodes = []
             while iterations < max_iterations and kcfg.frontier:
+                iterations += 1
                 next_node = kcfg.frontier[0]
                 if next_node not in checked_nodes:
                     _LOGGER.info(f'Checking for loops: {shorten_hashes(next_node.id)}')
@@ -304,7 +305,7 @@ class KIMP:
                     ]
                     if len(prior_loops_on_path) > 0:
                         _LOGGER.info(
-                            f'Loops found: {shorten_hashes(next_node.id)} -> {shorten_hashes(nd.id for nd in prior_loops_on_path)}'
+                            f'Loops found: {shorten_hashes(next_node.id)} -> {shorten_hashes(list(nd.id for nd in prior_loops_on_path))}'
                         )
                         generalized_term = next_node.cterm.kast
                         for node in prior_loops_on_path:

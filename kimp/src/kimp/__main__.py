@@ -96,7 +96,7 @@ def exec_prove(
             raise
 
 
-def exec_summarizer(
+def exec_summarize(
     definition_dir: str,
     spec_file: str,
     spec_module: str,
