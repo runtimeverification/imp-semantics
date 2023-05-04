@@ -386,7 +386,7 @@ def create_argument_parser() -> ArgumentParser:
     )
 
     # Prove
-    command_parser.add_parser(
+    _ = command_parser.add_parser(
         'prove', help='Prove a K claim', parents=[shared_args, spec_file_shared_args, claim_shared_args, explore_args]
     )
 
