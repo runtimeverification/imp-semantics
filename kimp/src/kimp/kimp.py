@@ -26,8 +26,8 @@ from pyk.ktool.krun import KRun, KRunOutput, _krun
 from pyk.prelude.kbool import BOOL, notBool
 from pyk.prelude.ml import mlEqualsTrue
 from pyk.proof.equality import EqualityProof, EqualityProver
-from pyk.proof.reachability import APRBMCProof, APRBMCProver, APRProof, APRProver
 from pyk.proof.proof import Proof
+from pyk.proof.reachability import APRBMCProof, APRBMCProver, APRProof, APRProver
 from pyk.proof.utils import read_proof
 from pyk.utils import shorten_hashes
 
@@ -267,10 +267,6 @@ class KIMP:
         spec_module: str,
         claim_id: str,
         max_iterations: int,
-        # max_depth: int,
-        # terminal_rules: Iterable[str],
-        # cut_rules: Iterable[str],
-        # proof_status: ProofStatus,
     ) -> None:
         claims = self.kprove.get_claims(
             Path(spec_file),
@@ -304,7 +300,7 @@ class KIMP:
                     ]
                     if len(prior_loops_on_path) > 0:
                         _LOGGER.info(
-                            f'Loops found: {shorten_hashes(next_node.id)} -> {shorten_hashes(list(nd.id for nd in prior_loops_on_path))}'
+                            f'Loops found: {shorten_hashes(next_node.id)} -> {shorten_hashes([nd.id for nd in prior_loops_on_path])}'
                         )
                         generalized_term = next_node.cterm.kast
                         for node in prior_loops_on_path:
@@ -316,9 +312,7 @@ class KIMP:
                     kcfg = prover.advance_proof(
                         kcfg_explore,
                         max_iterations=1,
-                        # execute_depth=1,
                         cut_point_rules=['IMP.while'],
-                        # terminal_rules='IMP.while',
                     )
 
         proof.write_proof()
