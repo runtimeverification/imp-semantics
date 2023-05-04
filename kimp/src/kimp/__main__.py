@@ -77,14 +77,39 @@ def exec_prove(
     spec_file: str,
     spec_module: str,
     claim_id: str,
-    # output: str = 'none',
+    max_iterations: int = 20,
     ignore_return_code: bool = False,
+    # output: str = 'none',
     **kwargs: Any,
 ) -> None:
     kimp = KIMP(definition_dir, definition_dir)
 
     try:
-        kimp.prove(spec_file=spec_file, spec_module=spec_module, claim_id=claim_id)
+        kimp.prove(spec_file=spec_file, spec_module=spec_module, claim_id=claim_id, max_iterations=max_iterations)
+    except RuntimeError as err:
+        if ignore_return_code:
+            msg, stdout, stderr = err.args
+            print(stdout)
+            print(stderr)
+            print(msg)
+        else:
+            raise
+
+
+def exec_summarize(
+    definition_dir: str,
+    spec_file: str,
+    spec_module: str,
+    claim_id: str,
+    max_iterations: int = 20,
+    ignore_return_code: bool = False,
+    # output: str = 'none',
+    **kwargs: Any,
+) -> None:
+    kimp = KIMP(definition_dir, definition_dir)
+
+    try:
+        kimp.summarize(spec_file=spec_file, spec_module=spec_module, claim_id=claim_id, max_iterations=max_iterations)
     except RuntimeError as err:
         if ignore_return_code:
             msg, stdout, stderr = err.args
@@ -179,10 +204,12 @@ def exec_show_kcfg(
     spec_file: str,
     spec_module: str,
     claim_id: str,
+    to_module: bool = False,
+    inline_nodes: bool = False,
     **kwargs: Any,
 ) -> None:
     kimp = KIMP(definition_dir, definition_dir)
-    kimp.show_kcfg(spec_file, spec_module, claim_id)
+    kimp.show_kcfg(spec_file, spec_module, claim_id, to_module=to_module, inline_nodes=inline_nodes)
 
 
 def exec_view_kcfg(
@@ -309,6 +336,42 @@ def create_argument_parser() -> ArgumentParser:
         type=str,
         help='Claim id',
     )
+    prove_subparser.add_argument(
+        '--max-iterations',
+        type=int,
+        default=20,
+        help='Maximum number of iterations to run prover for.',
+    )
+
+    # Summarize
+    summarize_subparser = command_parser.add_parser('summarize', help='Prove a K claim', parents=[shared_args])
+    summarize_subparser.add_argument(
+        '--definition-dir',
+        dest='definition_dir',
+        type=dir_path,
+        help='Path to Haskell definition to use.',
+    )
+    summarize_subparser.add_argument(
+        'spec_file',
+        type=file_path,
+        help='Path to .k file',
+    )
+    summarize_subparser.add_argument(
+        'spec_module',
+        type=str,
+        help='Spec main module',
+    )
+    summarize_subparser.add_argument(
+        'claim_id',
+        type=str,
+        help='Claim id',
+    )
+    summarize_subparser.add_argument(
+        '--max-iterations',
+        type=int,
+        default=20,
+        help='Maximum number of iterations to run summarizer for.',
+    )
 
     # BMC Prove
     bmc_prove_subparser = command_parser.add_parser(
@@ -410,6 +473,18 @@ def create_argument_parser() -> ArgumentParser:
         'claim_id',
         type=str,
         help='Claim id',
+    )
+    kcfg_show_subparser.add_argument(
+        '--to-module',
+        default=False,
+        action='store_true',
+        help='Display a K module containing the KCFG thus far.',
+    )
+    kcfg_show_subparser.add_argument(
+        '--inline-nodes',
+        default=False,
+        action='store_true',
+        help='Display states inline with KCFG nodes.',
     )
 
     # KCFG to dot

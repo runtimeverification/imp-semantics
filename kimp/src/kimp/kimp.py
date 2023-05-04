@@ -3,6 +3,7 @@ from __future__ import annotations
 __all__ = ['KIMP']
 
 import json
+import logging
 import subprocess
 from dataclasses import dataclass
 from functools import cached_property
@@ -12,7 +13,9 @@ from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Iterable, Optional, Union, final
 
 from pyk.cli_utils import check_dir_path, check_file_path
+from pyk.cterm import CTerm
 from pyk.kast.inner import KApply, KInner, KSequence, KVariable
+from pyk.kast.manip import anti_unify_with_constraints
 from pyk.kcfg.explore import KCFGExplore
 from pyk.kcfg.kcfg import KCFG
 from pyk.kcfg.show import KCFGShow
@@ -25,12 +28,15 @@ from pyk.prelude.ml import mlEqualsTrue
 from pyk.proof.equality import EqualityProof, EqualityProver
 from pyk.proof.reachability import APRBMCProof, APRBMCProver, APRProof, APRProver
 from pyk.proof.utils import read_proof
+from pyk.utils import shorten_hashes
 
 if TYPE_CHECKING:
     from subprocess import CompletedProcess
+    from typing import Final
 
-    from pyk.cterm import CTerm
     from pyk.ktool.kprint import SymbolTable
+
+_LOGGER: Final = logging.getLogger(__name__)
 
 
 @final
@@ -226,7 +232,7 @@ class KIMP:
         spec_file: str,
         spec_module: str,
         claim_id: str,
-        # max_iterations: int,
+        max_iterations: int,
         # max_depth: int,
         # terminal_rules: Iterable[str],
         # cut_rules: Iterable[str],
@@ -249,11 +255,72 @@ class KIMP:
         ) as kcfg_explore:
             kcfg = prover.advance_proof(
                 kcfg_explore,
-                max_iterations=20,
+                max_iterations=max_iterations,
                 # execute_depth=1,
                 cut_point_rules=['IMP.while'],
                 # terminal_rules='IMP.while',
             )
+
+        proof.write_proof()
+        print(proof.status)
+
+    def summarize(
+        self,
+        spec_file: str,
+        spec_module: str,
+        claim_id: str,
+        max_iterations: int,
+        # max_depth: int,
+        # terminal_rules: Iterable[str],
+        # cut_rules: Iterable[str],
+        # proof_status: ProofStatus,
+    ) -> None:
+        claims = self.kprove.get_claims(
+            Path(spec_file),
+            spec_module_name=spec_module,
+            claim_labels=[f'{spec_module}.{claim_id}'],
+            include_dirs=[self.haskell_dir.parent.parent.parent / 'include' / 'imp-semantics'],
+        )
+        assert len(claims) == 1
+
+        kcfg = KCFG.from_claim(self.kprove.definition, claims[0])
+        proof = APRProof(f'{spec_module}.{claim_id}', kcfg, proof_dir=self.proof_dir)
+        prover = APRProver(proof, is_terminal=KIMP._is_terminal, extract_branches=self._extract_branches)
+        with KCFGExplore(
+            self.kprove,
+            id=f'{spec_module}.{claim_id}',
+        ) as kcfg_explore:
+            iterations = 0
+            checked_nodes = []
+            while iterations < max_iterations and kcfg.frontier:
+                iterations += 1
+                next_node = kcfg.frontier[0]
+                if next_node not in checked_nodes:
+                    _LOGGER.info(f'Checking for loops: {shorten_hashes(next_node.id)}')
+                    checked_nodes.append(next_node)
+                    prior_loops_on_path = [
+                        node
+                        for node in proof.kcfg.reachable_nodes(next_node.id, reverse=True, traverse_covers=True)
+                        if node != next_node and self._same_loop(next_node.cterm, node.cterm) and not next_node.cterm.match_with_constraint(node.cterm)
+                    ]
+                    if len(prior_loops_on_path) > 0:
+                        _LOGGER.info(
+                            f'Loops found: {shorten_hashes(next_node.id)} -> {shorten_hashes(list(nd.id for nd in prior_loops_on_path))}'
+                        )
+                        generalized_term = next_node.cterm.kast
+                        for node in prior_loops_on_path:
+                            generalized_term = anti_unify_with_constraints(generalized_term, node.cterm.kast)
+                        cover_node = proof.kcfg.create_node(CTerm.from_kast(generalized_term))
+                        proof.kcfg.create_cover(next_node.id, cover_node.id)
+                        continue
+                else:
+                    kcfg = prover.advance_proof(
+                        kcfg_explore,
+                        max_iterations=1,
+                        # execute_depth=1,
+                        cut_point_rules=['IMP.while'],
+                        # terminal_rules='IMP.while',
+                    )
 
         proof.write_proof()
         print(proof.status)
@@ -333,6 +400,8 @@ class KIMP:
         spec_file: str,
         spec_module: str,
         claim_id: str,
+        to_module: bool = False,
+        inline_nodes: bool = False,
         # save_directory: Path | None = None,
         # includes: Iterable[str] = (),
         # claim_labels: Iterable[str] = (),
@@ -345,6 +414,11 @@ class KIMP:
         # minimize: bool = True,
         **kwargs: Any,
     ) -> None:
+        def _node_printer(cterm: CTerm) -> Iterable[str]:
+            return self.kprove.pretty_print(cterm.kast).split('\n')
+
+        node_printer = _node_printer if inline_nodes else None
+
         proof = read_proof(f'{spec_module}.{claim_id}', proof_dir=self.proof_dir)
         if type(proof) == EqualityProof:
             raise ValueError(f'Cannot show KCFG of EqualityProof {proof.id}')
@@ -353,9 +427,10 @@ class KIMP:
         res_lines = kcfg_show.show(
             proof.id,
             proof.kcfg,
+            to_module=to_module,
+            node_printer=node_printer,
             # nodes=nodes,
             # node_deltas=node_deltas,
-            # to_module=to_module,
             # minimize=minimize,
             # node_printer=kevm.short_info,
         )
