@@ -27,6 +27,7 @@ from pyk.prelude.kbool import BOOL, notBool
 from pyk.prelude.ml import mlEqualsTrue
 from pyk.proof.equality import EqualityProof, EqualityProver
 from pyk.proof.reachability import APRBMCProof, APRBMCProver, APRProof, APRProver
+from pyk.proof.proof import Proof
 from pyk.proof.utils import read_proof
 from pyk.utils import shorten_hashes
 
@@ -228,36 +229,14 @@ class KIMP:
         return preprocess_and_run(program_file, temp_file)
 
     def prove(
-<<<<<<< HEAD
-        self,
-        spec_file: str,
-        spec_module: str,
-        claim_id: str,
-        max_iterations: int,
-        # max_depth: int,
-        # terminal_rules: Iterable[str],
-        # cut_rules: Iterable[str],
-        # proof_status: ProofStatus,
-||||||| parent of 77acdfc (Clean-up arguments parsing and usage)
-        self,
-        spec_file: str,
-        spec_module: str,
-        claim_id: str,
-        # max_iterations: int,
-        # max_depth: int,
-        # terminal_rules: Iterable[str],
-        # cut_rules: Iterable[str],
-        # proof_status: ProofStatus,
-=======
         self, spec_file: str, spec_module: str, claim_id: str, max_iterations: int, max_depth: int, reinit: bool
->>>>>>> 77acdfc (Clean-up arguments parsing and usage)
     ) -> None:
-        try:
-            if reinit:
-                raise ValueError('Force reinit')
-            proof = read_proof(f'{spec_module}.{claim_id}', proof_dir=self.proof_dir)
-            assert type(proof) is APRProof
-        except ValueError:
+        proof_id = f'{spec_module}.{claim_id}'
+        if Proof.proof_exists(proof_id, proof_dir=self.proof_dir) and not reinit:
+            proof = read_proof(proof_id, proof_dir=self.proof_dir)
+            if type(proof) is not APRProof:
+                raise ValueError(f'Proof {proof_id} exists and is of type {type(proof)}, while APRProof was expected')
+        else:
             claims = self.kprove.get_claims(
                 Path(spec_file),
                 spec_module_name=spec_module,
@@ -274,16 +253,8 @@ class KIMP:
         ) as kcfg_explore:
             kcfg = prover.advance_proof(
                 kcfg_explore,
-<<<<<<< HEAD
-                max_iterations=max_iterations,
-                # execute_depth=1,
-||||||| parent of 77acdfc (Clean-up arguments parsing and usage)
-                max_iterations=20,
-                # execute_depth=1,
-=======
                 max_iterations=max_iterations,
                 execute_depth=max_depth,
->>>>>>> 77acdfc (Clean-up arguments parsing and usage)
                 cut_point_rules=['IMP.while'],
             )
 
@@ -327,7 +298,9 @@ class KIMP:
                     prior_loops_on_path = [
                         node
                         for node in proof.kcfg.reachable_nodes(next_node.id, reverse=True, traverse_covers=True)
-                        if node != next_node and self._same_loop(next_node.cterm, node.cterm) and not next_node.cterm.match_with_constraint(node.cterm)
+                        if node != next_node
+                        and self._same_loop(next_node.cterm, node.cterm)
+                        and not next_node.cterm.match_with_constraint(node.cterm)
                     ]
                     if len(prior_loops_on_path) > 0:
                         _LOGGER.info(
@@ -361,12 +334,14 @@ class KIMP:
         bmc_depth: int,
         reinit: bool,
     ) -> None:
-        try:
-            if reinit:
-                raise ValueError('Force reinit')
-            proof = read_proof(f'{spec_module}.{claim_id}', proof_dir=self.proof_dir)
-            assert type(proof) is APRBMCProof
-        except ValueError:
+        proof_id = f'{spec_module}.{claim_id}'
+        if Proof.proof_exists(proof_id, proof_dir=self.proof_dir) and not reinit:
+            proof = read_proof(proof_id, proof_dir=self.proof_dir)
+            if type(proof) is not APRBMCProof:
+                raise ValueError(
+                    f'Proof {proof_id} exists and is of type {type(proof)}, while APRBMCProof was expected'
+                )
+        else:
             claims = self.kprove.get_claims(
                 Path(spec_file),
                 spec_module_name=spec_module,

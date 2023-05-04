@@ -93,16 +93,10 @@ def exec_prove(
     spec_file: str,
     spec_module: str,
     claim_id: str,
-<<<<<<< HEAD
-    max_iterations: int = 20,
-||||||| parent of 77acdfc (Clean-up arguments parsing and usage)
-    # output: str = 'none',
-=======
     # output: str = 'none',
     max_iterations: int,
     max_depth: int,
     reinit: bool,
->>>>>>> 77acdfc (Clean-up arguments parsing and usage)
     ignore_return_code: bool = False,
     # output: str = 'none',
     **kwargs: Any,
@@ -110,8 +104,17 @@ def exec_prove(
     kimp = KIMP(definition_dir, definition_dir)
 
     try:
-<<<<<<< HEAD
-        kimp.prove(spec_file=spec_file, spec_module=spec_module, claim_id=claim_id, max_iterations=max_iterations)
+        kimp.prove(
+            spec_file=spec_file,
+            spec_module=spec_module,
+            claim_id=claim_id,
+            max_iterations=max_iterations,
+            max_depth=max_depth,
+            reinit=reinit,
+        )
+    except ValueError as err:
+        _LOGGER.critical(err.args)
+        exit(1)
     except RuntimeError as err:
         if ignore_return_code:
             msg, stdout, stderr = err.args
@@ -136,18 +139,9 @@ def exec_summarize(
 
     try:
         kimp.summarize(spec_file=spec_file, spec_module=spec_module, claim_id=claim_id, max_iterations=max_iterations)
-||||||| parent of 77acdfc (Clean-up arguments parsing and usage)
-        kimp.prove(spec_file=spec_file, spec_module=spec_module, claim_id=claim_id)
-=======
-        kimp.prove(
-            spec_file=spec_file,
-            spec_module=spec_module,
-            claim_id=claim_id,
-            max_iterations=max_iterations,
-            max_depth=max_depth,
-            reinit=reinit,
-        )
->>>>>>> 77acdfc (Clean-up arguments parsing and usage)
+    except ValueError as err:
+        _LOGGER.critical(err.args)
+        exit(1)
     except RuntimeError as err:
         if ignore_return_code:
             msg, stdout, stderr = err.args
@@ -183,6 +177,9 @@ def exec_bmc_prove(
             reinit=reinit,
             bmc_depth=bmc_depth,
         )
+    except ValueError as err:
+        _LOGGER.critical(err.args)
+        exit(1)
     except RuntimeError as err:
         if ignore_return_code:
             msg, stdout, stderr = err.args
@@ -438,7 +435,7 @@ def create_argument_parser() -> ArgumentParser:
     bmc_prove_subparser.add_argument(
         '--bmc-depth',
         type=int,
-        required=True,
+        default=1,
         help='Model checking bound',
     )
 
@@ -475,7 +472,9 @@ def create_argument_parser() -> ArgumentParser:
     )
 
     # KCFG show
-    kcfg_show_subparser = command_parser.add_parser('show-kcfg', help='Display tree show of CFG', parents=[shared_args, claim_shared_args])
+    kcfg_show_subparser = command_parser.add_parser(
+        'show-kcfg', help='Display tree show of CFG', parents=[shared_args, claim_shared_args]
+    )
     kcfg_show_subparser.add_argument(
         '--to-module',
         default=False,
