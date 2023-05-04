@@ -238,16 +238,19 @@ class KIMP:
         # cut_rules: Iterable[str],
         # proof_status: ProofStatus,
     ) -> None:
-        claims = self.kprove.get_claims(
-            Path(spec_file),
-            spec_module_name=spec_module,
-            claim_labels=[f'{spec_module}.{claim_id}'],
-            include_dirs=[self.haskell_dir.parent.parent.parent / 'include' / 'imp-semantics'],
-        )
-        assert len(claims) == 1
-
-        kcfg = KCFG.from_claim(self.kprove.definition, claims[0])
-        proof = APRProof(f'{spec_module}.{claim_id}', kcfg, proof_dir=self.proof_dir)
+        try:
+            proof = read_proof(f'{spec_module}.{claim_id}', proof_dir=self.proof_dir)
+            assert type(proof) is APRProof
+        except ValueError:
+            claims = self.kprove.get_claims(
+                Path(spec_file),
+                spec_module_name=spec_module,
+                claim_labels=[f'{spec_module}.{claim_id}'],
+                include_dirs=[self.haskell_dir.parent.parent.parent / 'include' / 'imp-semantics'],
+            )
+            assert len(claims) == 1
+            kcfg = KCFG.from_claim(self.kprove.definition, claims[0])
+            proof = APRProof(f'{spec_module}.{claim_id}', kcfg, proof_dir=self.proof_dir)
         prover = APRProver(proof, is_terminal=KIMP._is_terminal, extract_branches=self._extract_branches)
         with KCFGExplore(
             self.kprove,
@@ -262,7 +265,8 @@ class KIMP:
             )
 
         proof.write_proof()
-        print(proof.status)
+        for s in proof.summary:
+            print(s)
 
     def summarize(
         self,
@@ -436,10 +440,12 @@ class KIMP:
         )
         print('\n'.join(res_lines))
 
-        if hasattr(proof, '_bounded_states'):
-            print('Bounded states: ')
-            for state in proof._bounded_states:
-                print(state)
+        print('Proof summary:')
+        print('\n'.join(proof.summary))
+        # if hasattr(proof, '_bounded_states'):
+        #     print('Bounded states: ')
+        #     for state in proof._bounded_states:
+        #         print(state)
 
     def kcfg_refute_node(
         self,
@@ -451,7 +457,6 @@ class KIMP:
     ) -> None:
         proof = read_proof(f'{spec_module}.{claim_id}', proof_dir=self.proof_dir)
         assert type(proof) == APRProof
-        # assert proof.status == ProofStatus.PENDING
 
         node_id = proof.kcfg._resolve(node_short_hash)
         node_to_refute = proof.kcfg.get_node(node_id)
@@ -469,6 +474,8 @@ class KIMP:
         ) as kcfg_explore:
             prover.advance_proof(kcfg_explore)
 
+        for s in prover.proof.pretty(self.kprove):
+            print(s)
         # print('Pending subproofs: ')
         # for subproof in proof.read_subproofs():
         #     print(subproof.id)
