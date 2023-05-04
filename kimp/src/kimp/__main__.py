@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 from argparse import ArgumentParser
 from typing import TYPE_CHECKING, Any, Final
+import subprocess
+from pathlib import Path
 
 from pyk.cli_utils import dir_path, file_path
 from pyk.kast.inner import KApply, KSort, KToken, KVariable
@@ -14,7 +16,22 @@ from .kimp import KIMP
 if TYPE_CHECKING:
     from argparse import Namespace
 
+_LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
+
+
+def kbuild_definition_dir(target: str) -> Path:
+    proc_result = subprocess.run(
+        ['poetry', 'run', 'kbuild', 'which', target],
+        capture_output=True,
+    )
+    if proc_result.returncode:
+        _LOGGER.critical(
+            f'Could not find kbuild definition for target {target}. Run kbuild kompile {target}, or specify --definition-dir.'
+        )
+        exit(proc_result.returncode)
+    else:
+        return Path(proc_result.stdout.splitlines()[0].decode())
 
 
 def main() -> None:
@@ -227,7 +244,6 @@ def exec_show_refutation(
     definition_dir: str,
     node: str,
     # output: str = 'none',
-    ignore_return_code: bool = False,
     **kwargs: Any,
 ) -> None:
     kimp = KIMP(definition_dir, definition_dir)
@@ -249,6 +265,14 @@ def create_argument_parser() -> ArgumentParser:
     shared_args = ArgumentParser(add_help=False)
     shared_args.add_argument('--verbose', '-v', default=False, action='store_true', help='Verbose output.')
     shared_args.add_argument('--debug', default=False, action='store_true', help='Debug output.')
+    shared_args.add_argument(
+        '--definition-dir',
+        dest='definition_dir',
+        nargs='?',
+        default=kbuild_definition_dir('haskell'),
+        type=dir_path,
+        help='Path to compiled K definition to use.',
+    )
 
     parser = ArgumentParser(prog='kimp', description='KIMP command line tool')
     command_parser = parser.add_subparsers(dest='command', required=True, help='Command to execute')
@@ -258,12 +282,6 @@ def create_argument_parser() -> ArgumentParser:
         'input_file',
         type=file_path,
         help='Path to .imp file',
-    )
-    parse_subparser.add_argument(
-        '--definition-dir',
-        dest='definition_dir',
-        type=dir_path,
-        help='Path to LLVM definition to use.',
     )
     parse_subparser.add_argument(
         '--input',
@@ -292,12 +310,6 @@ def create_argument_parser() -> ArgumentParser:
         help='Path to .imp file',
     )
     run_subparser.add_argument(
-        '--definition-dir',
-        dest='definition_dir',
-        type=dir_path,
-        help='Path to LLVM definition to use.',
-    )
-    run_subparser.add_argument(
         '--output',
         dest='output',
         type=str,
@@ -315,12 +327,6 @@ def create_argument_parser() -> ArgumentParser:
 
     # Prove
     prove_subparser = command_parser.add_parser('prove', help='Prove a K claim', parents=[shared_args])
-    prove_subparser.add_argument(
-        '--definition-dir',
-        dest='definition_dir',
-        type=dir_path,
-        help='Path to Haskell definition to use.',
-    )
     prove_subparser.add_argument(
         'spec_file',
         type=file_path,
@@ -378,12 +384,6 @@ def create_argument_parser() -> ArgumentParser:
         'bmc-prove', help='Prove a K claim with the Bounded Model-Checker', parents=[shared_args]
     )
     bmc_prove_subparser.add_argument(
-        '--definition-dir',
-        dest='definition_dir',
-        type=dir_path,
-        help='Path to Haskell definition to use.',
-    )
-    bmc_prove_subparser.add_argument(
         '--bmc-depth',
         type=int,
         required=True,
@@ -410,12 +410,6 @@ def create_argument_parser() -> ArgumentParser:
         'refute-node', help='Refute a node as infeasible', parents=[shared_args]
     )
     refute_node_subparser.add_argument(
-        '--definition-dir',
-        dest='definition_dir',
-        type=dir_path,
-        help='Path to Haskell definition to use.',
-    )
-    refute_node_subparser.add_argument(
         'spec_file',
         type=file_path,
         help='Path to .k file',
@@ -440,12 +434,6 @@ def create_argument_parser() -> ArgumentParser:
     # EQ prove
     eq_prove_subparser = command_parser.add_parser('eq-prove', help='Prove an equality', parents=[shared_args])
     eq_prove_subparser.add_argument(
-        '--definition-dir',
-        dest='definition_dir',
-        type=dir_path,
-        help='Path to Haskell definition to use.',
-    )
-    eq_prove_subparser.add_argument(
         'proof_id',
         type=str,
         help='Id of a JSON-serialized proof',
@@ -453,12 +441,6 @@ def create_argument_parser() -> ArgumentParser:
 
     # KCFG show
     kcfg_show_subparser = command_parser.add_parser('show-kcfg', help='Display tree show of CFG', parents=[shared_args])
-    kcfg_show_subparser.add_argument(
-        '--definition-dir',
-        dest='definition_dir',
-        type=dir_path,
-        help='Path to Haskell definition to use.',
-    )
     kcfg_show_subparser.add_argument(
         'spec_file',
         type=file_path,
@@ -492,12 +474,6 @@ def create_argument_parser() -> ArgumentParser:
         'kcfg-to-dot', help='Dump the given CFG for the proof as DOT for visualization.', parents=[shared_args]
     )
     kcfg_to_dot_subparser.add_argument(
-        '--definition-dir',
-        dest='definition_dir',
-        type=dir_path,
-        help='Path to Haskell definition to use.',
-    )
-    kcfg_to_dot_subparser.add_argument(
         'spec_file',
         type=file_path,
         help='Path to .k file',
@@ -515,12 +491,6 @@ def create_argument_parser() -> ArgumentParser:
 
     # KCFG view
     kcfg_view_subparser = command_parser.add_parser('view-kcfg', help='Display tree view of CFG', parents=[shared_args])
-    kcfg_view_subparser.add_argument(
-        '--definition-dir',
-        dest='definition_dir',
-        type=dir_path,
-        help='Path to Haskell definition to use.',
-    )
     kcfg_view_subparser.add_argument(
         'spec_file',
         type=file_path,
@@ -540,12 +510,6 @@ def create_argument_parser() -> ArgumentParser:
     # show refutation
     show_refutation_subparser = command_parser.add_parser(
         'show-refutation', help='Display the equality proof of a node refutation', parents=[shared_args]
-    )
-    show_refutation_subparser.add_argument(
-        '--definition-dir',
-        dest='definition_dir',
-        type=dir_path,
-        help='Path to Haskell definition to use.',
     )
     show_refutation_subparser.add_argument(
         '--node',
