@@ -228,6 +228,7 @@ class KIMP:
         return preprocess_and_run(program_file, temp_file)
 
     def prove(
+<<<<<<< HEAD
         self,
         spec_file: str,
         spec_module: str,
@@ -237,8 +238,23 @@ class KIMP:
         # terminal_rules: Iterable[str],
         # cut_rules: Iterable[str],
         # proof_status: ProofStatus,
+||||||| parent of 77acdfc (Clean-up arguments parsing and usage)
+        self,
+        spec_file: str,
+        spec_module: str,
+        claim_id: str,
+        # max_iterations: int,
+        # max_depth: int,
+        # terminal_rules: Iterable[str],
+        # cut_rules: Iterable[str],
+        # proof_status: ProofStatus,
+=======
+        self, spec_file: str, spec_module: str, claim_id: str, max_iterations: int, max_depth: int, reinit: bool
+>>>>>>> 77acdfc (Clean-up arguments parsing and usage)
     ) -> None:
         try:
+            if reinit:
+                raise ValueError('Force reinit')
             proof = read_proof(f'{spec_module}.{claim_id}', proof_dir=self.proof_dir)
             assert type(proof) is APRProof
         except ValueError:
@@ -258,15 +274,21 @@ class KIMP:
         ) as kcfg_explore:
             kcfg = prover.advance_proof(
                 kcfg_explore,
+<<<<<<< HEAD
                 max_iterations=max_iterations,
                 # execute_depth=1,
+||||||| parent of 77acdfc (Clean-up arguments parsing and usage)
+                max_iterations=20,
+                # execute_depth=1,
+=======
+                max_iterations=max_iterations,
+                execute_depth=max_depth,
+>>>>>>> 77acdfc (Clean-up arguments parsing and usage)
                 cut_point_rules=['IMP.while'],
-                # terminal_rules='IMP.while',
             )
 
         proof.write_proof()
-        for s in proof.summary:
-            print(s)
+        print('\n'.join(proof.summary))
 
     def summarize(
         self,
@@ -334,23 +356,27 @@ class KIMP:
         spec_file: str,
         spec_module: str,
         claim_id: str,
-        # max_iterations: int,
-        # max_depth: int,
-        # terminal_rules: Iterable[str],
-        # cut_rules: Iterable[str],
-        # proof_status: ProofStatus,
+        max_iterations: int,
+        max_depth: int,
         bmc_depth: int,
+        reinit: bool,
     ) -> None:
-        claims = self.kprove.get_claims(
-            Path(spec_file),
-            spec_module_name=spec_module,
-            claim_labels=[f'{spec_module}.{claim_id}'],
-            include_dirs=[self.haskell_dir.parent.parent.parent / 'include' / 'imp-semantics'],
-        )
-        assert len(claims) == 1
+        try:
+            if reinit:
+                raise ValueError('Force reinit')
+            proof = read_proof(f'{spec_module}.{claim_id}', proof_dir=self.proof_dir)
+            assert type(proof) is APRBMCProof
+        except ValueError:
+            claims = self.kprove.get_claims(
+                Path(spec_file),
+                spec_module_name=spec_module,
+                claim_labels=[f'{spec_module}.{claim_id}'],
+                include_dirs=[self.haskell_dir.parent.parent.parent / 'include' / 'imp-semantics'],
+            )
+            assert len(claims) == 1
 
-        kcfg = KCFG.from_claim(self.kprove.definition, claims[0])
-        proof = APRBMCProof(f'{spec_module}.{claim_id}', kcfg, proof_dir=self.proof_dir, bmc_depth=bmc_depth)
+            kcfg = KCFG.from_claim(self.kprove.definition, claims[0])
+            proof = APRBMCProof(f'{spec_module}.{claim_id}', kcfg, proof_dir=self.proof_dir, bmc_depth=bmc_depth)
         prover = APRBMCProver(proof, is_terminal=KIMP._is_terminal, same_loop=KIMP._same_loop)
         with KCFGExplore(
             self.kprove,
@@ -358,33 +384,15 @@ class KIMP:
         ) as kcfg_explore:
             kcfg = prover.advance_proof(
                 kcfg_explore,
-                # max_iterations=20,
-                # execute_depth=1,
+                max_iterations=max_iterations,
+                execute_depth=max_depth,
                 cut_point_rules=['IMP.while'],
-                # terminal_rules='IMP.while',
             )
 
         proof.write_proof()
-        print(proof.status)
+        print('\n'.join(proof.summary))
 
-    def eq_prove(
-        self,
-        proof_id: str
-        # max_iterations: int,
-        # max_depth: int,
-        # terminal_rules: Iterable[str],
-        # cut_rules: Iterable[str],
-        # proof_status: ProofStatus,
-    ) -> None:
-        # claims = self.kprove.get_claims(
-        #     Path(spec_file),
-        #     spec_module_name=spec_module,
-        #     claim_labels=[f'{spec_module}.{claim_id}'],
-        #     include_dirs=[self.haskell_dir.parent.parent.parent / 'include' / 'imp-semantics'],
-        # )
-        # assert len(claims) == 1
-
-        # kcfg = KCFG.from_claim(self.kprove.definition, claims[0])
+    def eq_prove(self, proof_id: str) -> None:
         proof = read_proof(proof_id, self.proof_dir)
         assert type(proof) == EqualityProof
         prover = EqualityProver(proof)
@@ -401,21 +409,10 @@ class KIMP:
 
     def show_kcfg(
         self,
-        spec_file: str,
         spec_module: str,
         claim_id: str,
         to_module: bool = False,
         inline_nodes: bool = False,
-        # save_directory: Path | None = None,
-        # includes: Iterable[str] = (),
-        # claim_labels: Iterable[str] = (),
-        # exclude_claim_labels: Iterable[str] = (),
-        # spec_module: str | None = None,
-        # md_selector: str | None = None,
-        # nodes: Iterable[str] = (),
-        # node_deltas: Iterable[tuple[str, str]] = (),
-        # to_module: bool = False,
-        # minimize: bool = True,
         **kwargs: Any,
     ) -> None:
         def _node_printer(cterm: CTerm) -> Iterable[str]:
@@ -433,29 +430,21 @@ class KIMP:
             proof.kcfg,
             to_module=to_module,
             node_printer=node_printer,
-            # nodes=nodes,
-            # node_deltas=node_deltas,
-            # minimize=minimize,
-            # node_printer=kevm.short_info,
         )
         print('\n'.join(res_lines))
 
         print('Proof summary:')
         print('\n'.join(proof.summary))
-        # if hasattr(proof, '_bounded_states'):
-        #     print('Bounded states: ')
-        #     for state in proof._bounded_states:
-        #         print(state)
 
     def kcfg_refute_node(
         self,
-        spec_file: str,
         spec_module: str,
         claim_id: str,
         node_short_hash: str,
         assuming: KInner | None = None,
     ) -> None:
         proof = read_proof(f'{spec_module}.{claim_id}', proof_dir=self.proof_dir)
+        assert proof.proof_dir
         assert type(proof) == APRProof
 
         node_id = proof.kcfg._resolve(node_short_hash)
@@ -463,10 +452,11 @@ class KIMP:
         if node_to_refute is None:
             raise ValueError(f'No such node {node_short_hash}')
         refutation_id = proof.refute_node(node_to_refute, assuming=assuming)
-
-        assert proof.proof_dir
+        if refutation_id is None:
+            return None
         proof = read_proof(refutation_id, proof_dir=proof.proof_dir)
-        assert type(proof) is EqualityProof
+        if type(proof) is not EqualityProof:
+            raise ValueError(f'Refutation proof {proof.id} must be EqualityProof, but {type(proof)} was found.')
         prover = EqualityProver(proof)
         with KCFGExplore(
             self.kprove,
@@ -476,30 +466,11 @@ class KIMP:
 
         for s in prover.proof.pretty(self.kprove):
             print(s)
-        # print('Pending subproofs: ')
-        # for subproof in proof.read_subproofs():
-        #     print(subproof.id)
-        #     claim_id = f'{proof.id}_{source_id}_to_{target_id}'
-        #     # edge_claim, subst = build_claim(
-        #     #     claim_id=claim_id, init_cterm=edge.source.cterm, final_cterm=edge.target.cterm
-        #     # )
-        #     self.kprove._write_claim_definition(claim_id='obligation', claim=subproof.to_claim())
 
     def kcfg_to_dot(
         self,
-        spec_file: str,
         spec_module: str,
         claim_id: str,
-        # save_directory: Path | None = None,
-        # includes: Iterable[str] = (),
-        # claim_labels: Iterable[str] = (),
-        # exclude_claim_labels: Iterable[str] = (),
-        # spec_module: str | None = None,
-        # md_selector: str | None = None,
-        # nodes: Iterable[str] = (),
-        # node_deltas: Iterable[tuple[str, str]] = (),
-        # to_module: bool = False,
-        # minimize: bool = True,
         **kwargs: Any,
     ) -> None:
         def node_printer(cterm: CTerm) -> Iterable[str]:
@@ -518,24 +489,12 @@ class KIMP:
             dump_dir,
             dot=True,
             node_printer=node_printer,
-            # node_printer=lambda cterm: [self.kprove.pretty_print(cterm.cells['STATE_CELL'])],
         )
 
     def view_kcfg(
         self,
-        spec_file: str,
         spec_module: str,
         claim_id: str,
-        # save_directory: Path | None = None,
-        # includes: Iterable[str] = (),
-        # claim_labels: Iterable[str] = (),
-        # exclude_claim_labels: Iterable[str] = (),
-        # spec_module: str | None = None,
-        # md_selector: str | None = None,
-        # nodes: Iterable[str] = (),
-        # node_deltas: Iterable[tuple[str, str]] = (),
-        # to_module: bool = False,
-        # minimize: bool = True,
         **kwargs: Any,
     ) -> None:
         proof = read_proof(f'{spec_module}.{claim_id}', proof_dir=self.proof_dir)
@@ -545,17 +504,12 @@ class KIMP:
 
     def show_refutation(
         self,
+        spec_module: str,
+        claim_id: str,
         node: str,
         **kwargs: Any,
     ) -> None:
-        # proof = APRProof.read_proof(f'{spec_module}.{claim_id}', proof_dir=self.proof_dir)
-        proof = read_proof(f'infeasible-{node}', proof_dir=self.proof_dir)
+        proof = read_proof(f'{spec_module}.{claim_id}.node-infeasible-{node}', proof_dir=self.proof_dir)
 
         assert type(proof) == EqualityProof
-        for s in proof.pretty(self.kprove):
-            print(s)
-        # print(self.kprove.pretty_print(KRewrite(proof.lhs_body, proof.rhs_body)))
-        # kcfg_viewer = KCFGViewer(
-        #     KCFG.from_claim(defn=self.kprove.definition, claim=proof.to_claim()), kprint=self.kprove
-        # )
-        # kcfg_viewer.run()
+        print('\n'.join(proof.pretty(self.kprove)))
