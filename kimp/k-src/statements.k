@@ -9,10 +9,10 @@ module STATEMENTS-SYNTAX
                 | "if" "(" Expr ")" Stmt "else" Stmt [strict(1)]
                 | "if" "(" Expr ")" Stmt             [strict(1), avoid]
                 | "while" "(" Expr ")" Stmt          // not strict!
-                | "{" Stmts "}"
-
-  syntax Stmts ::= List{Stmt, ""}
-
+                // blocks of statements
+                | "{" Stmt "}"
+                | "{" "}"
+                | Stmt Stmt [right]
 endmodule
 
 module STATEMENTS-RULES
@@ -21,7 +21,7 @@ module STATEMENTS-RULES
   rule if ( true  ) E1 else _  => E1
   rule if ( false ) _  else E2 => E2
 
-  rule if ( C ) E => if ( C ) E else { .Stmts }
+  rule if ( C ) E => if ( C ) E else {}
 
   rule
     while ( C ) E
@@ -30,9 +30,12 @@ module STATEMENTS-RULES
         while ( C ) E
        }
 
-  rule { STMTS }         => STMTS ~> .K
-  rule S:Stmt Rest:Stmts => S ~> Rest
-  rule .Stmts            => .K
+  rule { E } => E
+
+  rule {} => .K
+
+  rule S1:Stmt S2:Stmt => S1 ~> S2
+
 endmodule
 
 module STATEMENTS

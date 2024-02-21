@@ -31,6 +31,8 @@ be used to evaluate/run things.
 
 ** Changes to Statements
 - functions, expressions, and "return" left out
-- Stmt block in the syntax (using List construct)
 
-- { SS:Stmts } rule requires a hack to have the RHS of sort K
+- initially had a separate ~Stmts~ block in the syntax (using List construct)
+  - ~{ SS:Stmts }~ rule requires a hack to have the RHS of sort ~K~
+  - inefficient: builds up ~.Stmts ~> .Stmts...~ chains during the execution
+- therefore changed to use  ~Stmt ::= Stmt Stmt~ (and explicit empty block)
