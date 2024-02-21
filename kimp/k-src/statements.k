@@ -15,24 +15,8 @@ module STATEMENTS-SYNTAX
 
 endmodule
 
-module STATEMENTS
-
-  imports EXPRESSIONS
-  imports VARIABLES-SYNTAX
+module STATEMENTS-RULES
   imports STATEMENTS-SYNTAX
-
-  configuration
-    <k> $PGM:Stmt </k>   // changed!
-    <env> .Map    </env>
-
-  // changed configuration, need to repeat the variable rule
-  rule
-    <k> X:Id => V ...</k>
-    <env> X |-> V ...</env>
-
-  rule
-    <k> X = V:Value ; => . ...</k>
-    <env> E => E [ X <- V ] </env>
 
   rule if ( true  ) E1 else _  => E1
   rule if ( false ) _  else E2 => E2
@@ -49,4 +33,25 @@ module STATEMENTS
   rule { STMTS }         => STMTS ~> .K
   rule S:Stmt Rest:Stmts => S ~> Rest
   rule .Stmts            => .K
+endmodule
+
+module STATEMENTS
+
+  imports EXPRESSIONS
+  imports VARIABLES-SYNTAX
+  imports STATEMENTS-RULES
+
+  configuration
+    <k> $PGM:Stmt </k>   // changed!
+    <env> .Map    </env>
+
+  // changed configuration, need to repeat the variable rule
+  rule
+    <k> X:Id => V ...</k>
+    <env> X |-> V ...</env>
+
+  // assignment rule accesses configuration
+  rule
+    <k> X = V:Value ; => . ...</k>
+    <env> E => E [ X <- V ] </env>
 endmodule
