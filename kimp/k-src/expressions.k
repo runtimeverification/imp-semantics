@@ -14,15 +14,13 @@ endmodule
 module EXPRESSIONS-SYNTAX
   imports VALUE-SYNTAX
 
-  syntax Args     ::= List{Expr, ","}
-
   syntax Expr     ::= Value
                     | "(" Expr ")" [bracket]
 
   syntax Expr     ::= "-" Expr      [group(unary), strict, non-assoc]
-                    | Expr "*" Expr [group(mul), strict, left]
+                    > Expr "*" Expr [group(mul), strict, left]
                     | Expr "/" Expr [group(mul), strict, left]
-                    | Expr "+" Expr [group(add), strict, left]
+                    > Expr "+" Expr [group(add), strict, left]
                     | Expr "-" Expr [group(add), strict, left]
 
   syntax Expr     ::= Expr "==" Expr [group(bool),   strict, non-assoc]

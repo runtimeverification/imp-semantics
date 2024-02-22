@@ -1,4 +1,4 @@
-require "expressions.k"
+// require "expressions.k" in scope via variables.k
 require "variables.k"
 
 module STATEMENTS-SYNTAX
