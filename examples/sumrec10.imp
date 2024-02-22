@@ -1,0 +1,7 @@
+fun sumToZero(N) = {
+    if (N <= 0)
+      return 0;
+    else
+      return N + sumToZero(N - 1);
+}
+sumToZero(10);

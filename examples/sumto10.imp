@@ -1,0 +1,7 @@
+sum = 0;
+n = 10;
+k = 0;
+while (k <= n) {
+  sum = sum + k;
+  k = k + 1;
+}

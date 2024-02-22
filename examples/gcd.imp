@@ -1,0 +1,23 @@
+fun mod(a, b) = {
+  if (b == 0)
+    return 0;
+  else
+    return a - (a / b) * b ;
+}
+
+fun gcd_(a, b) = {
+  c = mod(a, b);
+  if (c == 0)
+    return b;
+  else
+    return gcd_(b, c);
+}
+
+fun gcd(a, b) = {
+  if (a >= b)
+    return gcd_(a, b);
+  else
+    return gcd_(b, a);
+}
+
+gcd(51, 170);
