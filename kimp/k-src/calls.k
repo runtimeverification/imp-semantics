@@ -48,7 +48,7 @@ module CALLS
 
   // assignment rule accesses configuration
   rule
-    <k> X = V:Value ; => . ...</k>
+    <k> X = V:Value ; => .K ...</k>
     <env> E => E [ X <- V ] </env>
 
   // function declaration
@@ -83,7 +83,7 @@ module CALLS
              // what if F is not declared?
        <stack> STK => ListItem(#frame(Cont, E)) STK </stack>
 
-  rule <k> #bindArgs(.Args, .Params) => . ... </k>
+  rule <k> #bindArgs(.Args, .Params) => .K ... </k>
        <args> AS => .Map </args>
        <env> _ => AS </env>
 
@@ -104,7 +104,7 @@ module CALLS
   rule <k> V => #return(V) </k>
 
   // otherwise remove and proceed with rest
-  rule <k> _:Value => . ... </k> [owise]
+  rule <k> _:Value => .K ... </k> [owise]
 
   // if an expression is "called", evaluate it
   rule <k> E ; => E ... </k>

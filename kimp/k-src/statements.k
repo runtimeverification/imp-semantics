@@ -55,6 +55,6 @@ module STATEMENTS
 
   // assignment rule accesses configuration
   rule
-    <k> X = V:Value ; => . ...</k>
+    <k> X = V:Value ; => .K ...</k>
     <env> E => E [ X <- V ] </env>
 endmodule
