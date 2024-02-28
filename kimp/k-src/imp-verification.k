@@ -1,6 +1,8 @@
-requires "imp.k"
+requires "calls.k"
 
 module IMP-VERIFICATION-SYNTAX
+    imports ID-SYNTAX
+
     syntax Id ::= "$s" [token]
                 | "$s1" [token]
                 | "$s2" [token]
@@ -11,7 +13,7 @@ endmodule
 
 module IMP-VERIFICATION
     imports IMP-VERIFICATION-SYNTAX
-    imports IMP
+    imports CALLS
 
     // inequality sign normalization
     rule          A  >Int B  => B  <Int A [simplification]
@@ -20,4 +22,3 @@ module IMP-VERIFICATION
     rule notBool (A <=Int B) => B  <Int A [simplification]
 
 endmodule
-

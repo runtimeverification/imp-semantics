@@ -1,0 +1,38 @@
+#+Title: Notes about splitting up the PLDI-IMP semantics into different files
+
+* Full semantics split up into different levels
+General idea:
+1. Define expressions without variables
+2. then with variables,
+3. then follow with statements
+4. finally add functions/procedures.
+
+At each level, provide a configuration (if required) so that krun can
+be used to evaluate/run things.
+
+** Changes to expressions.k
+- define without variables to start with
+  - variables come later in their own modules
+  - extra file for a first configuration to work with (later not
+    imported any more)
+- leave out special operations #balance and #send
+  - will be added later for the demo proof if needed
+- define KResult sort early (on sort `Value`)
+
+** Extra module for the configuration
+- different language levels bring their own configuration (from
+  variables onwards)
+  - configurations in separate modules to avoid getting in the way in
+    the final language
+- rules that access a configuration need to be adjacent to it
+  - variables.k:VARIABLES module for example
+- if the K cell has the same sort, we can avoid the duplication
+  - statements.k:STATEMENTS module for example
+
+** Changes to Statements
+- functions, expressions, and "return" left out
+
+- initially had a separate ~Stmts~ block in the syntax (using List construct)
+  - ~{ SS:Stmts }~ rule requires a hack to have the RHS of sort ~K~
+  - inefficient: builds up ~.Stmts ~> .Stmts...~ chains during the execution
+- therefore changed to use  ~Stmt ::= Stmt Stmt~ (and explicit empty block)
