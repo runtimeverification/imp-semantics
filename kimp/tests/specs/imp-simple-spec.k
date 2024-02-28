@@ -28,6 +28,16 @@ module IMP-SIMPLE-SPEC
     claim [while-cut-rule-delayed]: <k> $n = 7 ; while (B:Bool) BB:Stmt => if (B) { BB while (B) BB } else {} ... </k>
                                     <env> $n |-> (_ => ?_) </env>
 
+    claim [sum-loop]:
+        <k> while (0 < $n) { $s = $s + $n ; $n = $n - 1 ; } => . ... </k>
+        <env> $s |-> S $n |-> N => $s |-> S +Int (N *Int (N +Int 1)) /Int 2 $n |-> 0 </env>
+      requires 0 <=Int N // Try without this!
+
+    claim [sum-N]:
+        <k> $s = 0; $n = N; while (0 < $n) { $s = $s + $n ; $n = $n - 1 ; } => . ... </k>
+        <env> .Map => $s |-> (N *Int (N +Int 1)) /Int 2 $n |-> 0 </env>
+      requires 0 <=Int N
+
     claim [bmc-loop-concrete]: <k> while (0 <= $n) { $n = $n + -1 ; } => . ... </k>
                                <env> $n |-> (1 => ?N) </env>
       ensures 0 <Int ?N
@@ -37,12 +47,4 @@ module IMP-SIMPLE-SPEC
       requires 0 <=Int S
        ensures 0 <Int ?N
 
-    claim [sum-10]: <k> $s = 0; $n = 10 ; while (0 <= $n) { $s = $s + $n ; $n = $n + -1 ; } => . ... </k>
-                    <env> .Map => $s |-> 55 $n |-> -1 </env>
-
-    claim [sum-100]: <k> $s = 0; $n = 100 ; while (0 <= $n) { $s = $s + $n ; $n = $n + -1 ; } => . ... </k>
-                     <env> .Map => $s |-> 5050 $n |-> -1 </env>
-
-    claim [sum-1000]: <k> $s = 0; $n = 1000 ; while (0 <= $n) { $s = $s + $n ; $n = $n + -1 ; } => . ... </k>
-                      <env> .Map => $s |-> 500500 $n |-> -1 </env>
 endmodule
