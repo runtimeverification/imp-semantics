@@ -1,4 +1,4 @@
-require "expressions.k"
+requires "expressions.k"
 
 module VARIABLES-SYNTAX
   imports EXPRESSIONS-SYNTAX

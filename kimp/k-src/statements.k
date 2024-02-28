@@ -1,5 +1,5 @@
-// require "expressions.k" in scope via variables.k
-require "variables.k"
+// requires "expressions.k" in scope via variables.k
+requires "variables.k"
 
 module STATEMENTS-SYNTAX
   imports EXPRESSIONS-SYNTAX
