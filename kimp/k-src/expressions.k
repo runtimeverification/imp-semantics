@@ -29,6 +29,10 @@ module EXPRESSIONS-SYNTAX
                     | Expr ">"  Expr [group(bool),   strict, non-assoc]
                     | Expr "<=" Expr [group(bool), strict, non-assoc]
                     | Expr "<"  Expr [group(bool),   strict, non-assoc]
+
+  syntax Expr     ::= "!" Expr [strict, non-assoc]
+                    > Expr "&&" Expr [strict, left]
+                    > Expr "||" Expr [strict, left]
 endmodule
 
 module EXPRESSIONS
@@ -53,4 +57,8 @@ module EXPRESSIONS
   rule I1 >  I2 => I1 >Int  I2
   rule I1 <= I2 => I1 <=Int I2
   rule I1 <  I2 => I1 <Int  I2
+
+  rule ! B => notBool B
+  rule B1 && B2 => B1 andBool B2
+  rule B1 || B2 => B1 orBool B2
 endmodule
