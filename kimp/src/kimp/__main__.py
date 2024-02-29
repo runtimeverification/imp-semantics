@@ -46,23 +46,6 @@ def main() -> None:
     execute(**vars(args))
 
 
-# def exec_parse(
-#     input_file: str,
-#     definition_dir: str,
-#     input: str = 'program',
-#     output: str = 'kore',
-#     **kwargs: Any,
-# ) -> None:
-#     kast_input = KAstInput[input.upper()]
-#     kast_output = KAstOutput[output.upper()]
-
-#     kimp = KIMP(definition_dir, definition_dir)
-#     proc_res = kimp.parse_program_raw(input_file, input=kast_input, output=kast_output)
-
-#     if output != KAstOutput.NONE:
-#         print(proc_res.stdout)
-
-
 def exec_run(
     input_file: str,
     definition_dir: str,
@@ -90,150 +73,40 @@ def exec_run(
             raise
 
 
-# def exec_prove(
-#     definition_dir: str,
-#     spec_file: str,
-#     spec_module: str,
-#     claim_id: str,
-#     # output: str = 'none',
-#     max_iterations: int,
-#     max_depth: int,
-#     reinit: bool,
-#     ignore_return_code: bool = False,
-#     # output: str = 'none',
-#     **kwargs: Any,
-# ) -> None:
-#     kimp = KIMP(definition_dir, definition_dir)
+def exec_prove(
+    definition_dir: str,
+    spec_file: str,
+    spec_module: str,
+    claim_id: str,
+    max_iterations: int,
+    max_depth: int,
+    ignore_return_code: bool = False,
+    **kwargs: Any,
+) -> None:
+    definition_dir = str(kbuild_definition_dir('haskell'))
 
-#     try:
-#         kimp.prove(
-#             spec_file=spec_file,
-#             spec_module=spec_module,
-#             claim_id=claim_id,
-#             max_iterations=max_iterations,
-#             max_depth=max_depth,
-#             reinit=reinit,
-#         )
-#     except ValueError as err:
-#         _LOGGER.critical(err.args)
-#         exit(1)
-#     except RuntimeError as err:
-#         if ignore_return_code:
-#             msg, stdout, stderr = err.args
-#             print(stdout)
-#             print(stderr)
-#             print(msg)
-#         else:
-#             raise
+    kimp = KIMP(definition_dir, definition_dir)
 
-
-# def exec_summarize(
-#     definition_dir: str,
-#     spec_file: str,
-#     spec_module: str,
-#     claim_id: str,
-#     max_iterations: int = 20,
-#     ignore_return_code: bool = False,
-#     # output: str = 'none',
-#     **kwargs: Any,
-# ) -> None:
-#     kimp = KIMP(definition_dir, definition_dir)
-
-#     try:
-#         kimp.summarize(spec_file=spec_file, spec_module=spec_module, claim_id=claim_id, max_iterations=max_iterations)
-#     except ValueError as err:
-#         _LOGGER.critical(err.args)
-#         exit(1)
-#     except RuntimeError as err:
-#         if ignore_return_code:
-#             msg, stdout, stderr = err.args
-#             print(stdout)
-#             print(stderr)
-#             print(msg)
-#         else:
-#             raise
-
-
-# def exec_bmc_prove(
-#     definition_dir: str,
-#     spec_file: str,
-#     spec_module: str,
-#     claim_id: str,
-#     max_iterations: int,
-#     max_depth: int,
-#     reinit: bool,
-#     bmc_depth: int,
-#     # output: str = 'none',
-#     ignore_return_code: bool = False,
-#     **kwargs: Any,
-# ) -> None:
-#     kimp = KIMP(definition_dir, definition_dir)
-
-#     try:
-#         kimp.bmc_prove(
-#             spec_file=spec_file,
-#             spec_module=spec_module,
-#             claim_id=claim_id,
-#             max_iterations=max_iterations,
-#             max_depth=max_depth,
-#             reinit=reinit,
-#             bmc_depth=bmc_depth,
-#         )
-#     except ValueError as err:
-#         _LOGGER.critical(err.args)
-#         exit(1)
-#     except RuntimeError as err:
-#         if ignore_return_code:
-#             msg, stdout, stderr = err.args
-#             print(stdout)
-#             print(stderr)
-#             print(msg)
-#         else:
-#             raise
-
-
-# def exec_eq_prove(
-#     definition_dir: str,
-#     proof_id: str,
-#     # output: str = 'none',
-#     ignore_return_code: bool = False,
-#     **kwargs: Any,
-# ) -> None:
-#     kimp = KIMP(definition_dir, definition_dir)
-
-#     try:
-#         kimp.eq_prove(proof_id)
-#     except RuntimeError as err:
-#         if ignore_return_code:
-#             msg, stdout, stderr = err.args
-#             print(stdout)
-#             print(stderr)
-#             print(msg)
-#         else:
-#             raise
-
-
-# def exec_refute_node(
-#     definition_dir: str,
-#     spec_module: str,
-#     claim_id: str,
-#     node: str,
-#     # output: str = 'none',
-#     ignore_return_code: bool = False,
-#     **kwargs: Any,
-# ) -> None:
-#     kimp = KIMP(definition_dir, definition_dir)
-
-#     try:
-#         kimp.kcfg_refute_node(spec_module=spec_module, claim_id=claim_id, node_short_hash=node)
-#     except RuntimeError as err:
-#         if ignore_return_code:
-#             msg, stdout, stderr = err.args
-#             print(stdout)
-#             print(stderr)
-#             print(msg)
-#         else:
-#             raise
+    try:
+        kimp.prove(
+            spec_file=spec_file,
+            spec_module=spec_module,
+            claim_id=claim_id,
+            max_iterations=max_iterations,
+            max_depth=max_depth,
+            includes=['k-src'],  # TODO this needs to be more rubust
+        )
+    except ValueError as err:
+        _LOGGER.critical(err.args)
+        exit(1)
+    except RuntimeError as err:
+        if ignore_return_code:
+            msg, stdout, stderr = err.args
+            print(stdout)
+            print(stderr)
+            print(msg)
+        else:
+            raise
 
 
 # def exec_show_kcfg(
@@ -256,27 +129,6 @@ def exec_run(
 # ) -> None:
 #     kimp = KIMP(definition_dir, definition_dir)
 #     kimp.view_kcfg(spec_module, claim_id)
-
-
-# def exec_show_refutation(
-#     definition_dir: str,
-#     spec_module: str,
-#     claim_id: str,
-#     node: str,
-#     **kwargs: Any,
-# ) -> None:
-#     kimp = KIMP(definition_dir, definition_dir)
-#     kimp.show_refutation(spec_module, claim_id, node=node)
-
-
-# def exec_kcfg_to_dot(
-#     definition_dir: str,
-#     spec_module: str,
-#     claim_id: str,
-#     **kwargs: Any,
-# ) -> None:
-#     kimp = KIMP(definition_dir, definition_dir)
-#     kimp.kcfg_to_dot(spec_module, claim_id)
 
 
 def create_argument_parser() -> ArgumentParser:
