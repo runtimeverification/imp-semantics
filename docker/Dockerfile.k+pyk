@@ -19,7 +19,10 @@ RUN apt install curl && \
     printf "user: $USER\ngroup: $GROUP\n" > /etc/fixuid/config.yml
 USER k-user:k-group
 WORKDIR /home/k-user
-ENV PATH=/home/k-user/.local/bin:$PATH force_color_prompt=yes
+ENV K_VERSION=${K_VERSION} \
+    PYK_VERSION=${PYK_VERSION} \
+    PATH=/home/k-user/.local/bin:$PATH \
+    force_color_prompt=yes
 
 # install poetry and pyk (ours! not the one in pip)
 RUN pip install poetry && \
