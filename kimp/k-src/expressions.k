@@ -18,21 +18,26 @@ module EXPRESSIONS-SYNTAX
                     | "(" Expr ")" [bracket]
 
   syntax Expr     ::= "-" Expr      [group(unary), strict, non-assoc]
-                    > Expr "*" Expr [group(mul), strict, left]
-                    | Expr "/" Expr [group(mul), strict, left]
-                    > Expr "+" Expr [group(add), strict, left]
-                    | Expr "-" Expr [group(add), strict, left]
+                    > left:
+                      Expr "*" Expr [group(mul), seqstrict]
+                    | Expr "/" Expr [group(mul), seqstrict]
+                    > left:
+                      Expr "+" Expr [group(add), seqstrict]
+                    | Expr "-" Expr [group(add), strict]
 
-  syntax Expr     ::= Expr "==" Expr [group(bool),   strict, non-assoc]
-                    | Expr "!=" Expr [group(bool),  strict, non-assoc]
-                    | Expr ">=" Expr [group(bool), strict, non-assoc]
-                    | Expr ">"  Expr [group(bool),   strict, non-assoc]
-                    | Expr "<=" Expr [group(bool), strict, non-assoc]
-                    | Expr "<"  Expr [group(bool),   strict, non-assoc]
+  syntax Expr     ::= Expr "==" Expr [group(comp), seqstrict, non-assoc]
+                    | Expr "!=" Expr [group(comp), seqstrict, non-assoc]
+                    | Expr ">=" Expr [group(comp), seqstrict, non-assoc]
+                    | Expr ">"  Expr [group(comp), seqstrict, non-assoc]
+                    | Expr "<=" Expr [group(comp), seqstrict, non-assoc]
+                    | Expr "<"  Expr [group(comp), seqstrict, non-assoc]
 
-  syntax Expr     ::= "!" Expr [strict, non-assoc]
-                    > Expr "&&" Expr [strict, left]
-                    > Expr "||" Expr [strict, left]
+  syntax Expr     ::= "!" Expr       [group(bool), strict, right]
+                    > Expr "&&" Expr [group(bool), seqstrict, left]
+                    > Expr "||" Expr [group(bool), seqstrict, left]
+
+  syntax priority unary > mul > add > comp > bool
+
 endmodule
 
 module EXPRESSIONS
