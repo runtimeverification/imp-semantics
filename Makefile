@@ -27,9 +27,9 @@ build-llvm: have-k $(TARGETS:=-llvm)
 build-haskell: have-k $(TARGETS:=-haskell)
 
 .build/%-kompiled-llvm: kimp/k-src/%.k $(K_SOURCES)
-	$(KOMPILE) --output-definition $@-llvm $< -I kimp/k-src --backend llvm
+	$(KOMPILE) --output-definition $@ $< -I kimp/k-src --backend llvm
 .build/%-kompiled-haskell: kimp/k-src/%.k $(K_SOURCES)
-	$(KOMPILE) --output-definition $@-haskell $< -I kimp/k-src --backend haskell
+	$(KOMPILE) --output-definition $@ $< -I kimp/k-src --backend haskell
 
 .phony: have-k
 have-k: FOUND_VERSION = $(shell $(KOMPILE) --version \
