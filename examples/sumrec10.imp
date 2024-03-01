@@ -4,4 +4,5 @@ fun sumToZero(N) = {
     else
       return N + sumToZero(N - 1);
 }
-sumToZero(10);
+
+return sumToZero(10);

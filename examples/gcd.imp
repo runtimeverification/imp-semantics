@@ -20,4 +20,4 @@ fun gcd(a, b) = {
     return gcd_(b, a);
 }
 
-gcd(51, 170);
+return gcd(51, 170);

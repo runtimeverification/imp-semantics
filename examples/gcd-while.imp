@@ -1,0 +1,21 @@
+// input values
+a = 51;
+b = 170;
+
+// make sure a >= b
+if (a < b) {
+  r = a;
+  a = b;
+  b = r;
+}
+
+// compute a mod b
+r = a - (a / b) * b;
+
+while (r > 0) {
+  a = b;
+  b = r;
+  r = a - (a / b) * b;
+}
+
+result = b;
