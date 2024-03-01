@@ -6,13 +6,14 @@ module STATEMENTS-SYNTAX
   imports VARIABLES-SYNTAX
 
   syntax Stmt ::= Id "=" Expr ";"                    [strict(2)]
-                | "if" "(" Expr ")" Stmt "else" Stmt [strict(1)]
-                | "if" "(" Expr ")" Stmt             [strict(1), avoid]
+                | "if" "(" Expr ")" Stmt "else" Stmt [strict(1), avoid] // dangling else
+                | "if" "(" Expr ")" Stmt             [strict(1)]
                 | "while" "(" Expr ")" Stmt          // not strict!
                 // blocks of statements
                 | "{" Stmt "}"
                 | "{" "}"
-                | Stmt Stmt [right]
+                > right:
+                  Stmt Stmt
 endmodule
 
 module STATEMENTS-RULES
