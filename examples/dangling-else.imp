@@ -1,0 +1,9 @@
+a = 0;
+b = 0;
+
+if ( false )
+    if ( true )
+        b = 1;
+    else // is this indentation correct?
+        b = 2;
+a = 1; // how about this one?
