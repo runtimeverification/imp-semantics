@@ -32,7 +32,7 @@ module EXPRESSIONS-SYNTAX
                     | Expr "<=" Expr [group(comp), seqstrict, non-assoc]
                     | Expr "<"  Expr [group(comp), seqstrict, non-assoc]
 
-  syntax Expr     ::= "!" Expr       [group(bool), strict, right]
+  syntax Expr     ::= "!" Expr       [group(unary), strict, non-assoc]
                     > Expr "&&" Expr [group(bool), seqstrict, left]
                     > Expr "||" Expr [group(bool), seqstrict, left]
 
