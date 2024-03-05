@@ -1,4 +1,4 @@
-requires "calls.k"
+requires "statements.k"
 
 module IMP-VERIFICATION-SYNTAX
     imports ID-SYNTAX
@@ -13,7 +13,7 @@ endmodule
 
 module IMP-VERIFICATION
     imports IMP-VERIFICATION-SYNTAX
-    imports CALLS
+    imports STATEMENTS
 
     // inequality sign normalization
     rule          A  >Int B  => B  <Int A [simplification]

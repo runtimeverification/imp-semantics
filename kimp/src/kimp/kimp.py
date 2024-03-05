@@ -99,9 +99,9 @@ class KIMP:
         llvm_dir = Path(llvm_dir)
         check_dir_path(llvm_dir)
 
-        imp_parser = llvm_dir / 'parser_Stmt_CALLS-SYNTAX'
+        imp_parser = llvm_dir / 'parser_Stmt_STATEMENTS-SYNTAX'
         if not imp_parser.is_file():
-            imp_parser = gen_glr_parser(imp_parser, definition_dir=llvm_dir, module='CALLS-SYNTAX', sort='Stmt')
+            imp_parser = gen_glr_parser(imp_parser, definition_dir=llvm_dir, module='STATEMENTS-SYNTAX', sort='Stmt')
 
         haskell_dir = Path(haskell_dir)
         check_dir_path(haskell_dir)
