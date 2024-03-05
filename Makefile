@@ -1,6 +1,6 @@
 # Latest versions at the time of writing
-K_VERSION   ?= 6.3.19
-PYK_VERSION ?= 0.1.664
+K_VERSION   ?= 6.3.25
+PYK_VERSION ?= 0.1.679
 KOMPILE     ?= $(shell which kompile)
 
 default: help
@@ -15,7 +15,7 @@ docker/.image: docker/Dockerfile.k+pyk
 	docker build \
 		--build-arg K_VERSION=$(K_VERSION) \
 		--build-arg PYK_VERSION=$(PYK_VERSION) \
-		-f $< -t runtimeverification/imp-semantics-k:$(K_VERSION) .
+		-f $< -t runtimeverificationinc/imp-semantics-k:$(K_VERSION) .
 	touch $@
 
 K_SOURCES = $(wildcard kimp/k-src/*.k)
