@@ -49,6 +49,20 @@ def find_definiton_dir(target: str) -> Path:
         return kbuild_definition_dir(target)
 
 
+def find_k_src_dir() -> Path:
+    '''
+    A heuristic way to find the the k-src dir with the K sources is located:
+    * if KIMP_K_SRC environment variable is set --- use that
+    * otherwise, use ./k-src and hope it works
+    '''
+    ksrc_dir = os.environ.get(f'KIMP_K_SRC')
+    if ksrc_dir:
+        ksrc_dir = Path(ksrc_dir).resolve()
+    else:
+        ksrc_dir = Path('./k-src')
+    return ksrc_dir
+
+
 def main() -> None:
     parser = create_argument_parser()
     args = parser.parse_args()
@@ -100,6 +114,7 @@ def exec_prove(
     **kwargs: Any,
 ) -> None:
     definition_dir = str(find_definiton_dir('haskell'))
+    k_src_dir = str(find_k_src_dir())
 
     kimp = KIMP(definition_dir, definition_dir)
 
@@ -110,7 +125,7 @@ def exec_prove(
             claim_id=claim_id,
             max_iterations=max_iterations,
             max_depth=max_depth,
-            includes=['k-src'],  # TODO this needs to be more rubust
+            includes=[k_src_dir],
         )
     except ValueError as err:
         _LOGGER.critical(err.args)
