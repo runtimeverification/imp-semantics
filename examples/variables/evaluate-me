@@ -1,2 +1,5 @@
 12 + 3 + A
 A + 12 + 3
+let A = -12 in 12 + A
+let A = -12 in let A = 34 in 12 + A
+let A = -12 in (let A = 34 in 12) + A
