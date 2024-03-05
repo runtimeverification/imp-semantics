@@ -1,6 +1,5 @@
-# Latest versions at the time of writing
-K_VERSION   ?= 6.3.25
-PYK_VERSION ?= 0.1.679
+K_VERSION   ?= $(shell cat deps/k_release)
+PYK_VERSION ?= $(shell cat deps/pyk_release)
 KOMPILE     ?= $(shell which kompile)
 
 default: help
