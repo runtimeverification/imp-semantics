@@ -1,43 +1,41 @@
 from __future__ import annotations
-from contextlib import contextmanager
-from pyk.cterm.symbolic import CTermSymbolic
-from pyk.kast.outer import KDefinition
-
-from pyk.kcfg.semantics import KCFGSemantics
-from pyk.kore.kompiled import KompiledKore
-from pyk.kore.rpc import FallbackReason, KoreClient, kore_server
-from pyk.utils import BugReport, single
 
 __all__ = ['KIMP']
 
 import logging
+from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import TYPE_CHECKING, Any, Iterable, Iterator, Optional, Union, final
+from typing import TYPE_CHECKING, Iterable, Iterator, Optional, Union, final
 
-from pyk.cli_utils import check_dir_path, check_file_path
+from pyk.cli.utils import check_dir_path, check_file_path
+from pyk.cterm.symbolic import CTermSymbolic
 from pyk.kast.inner import KApply, KSequence, KVariable
 from pyk.kcfg.explore import KCFGExplore
-from pyk.kcfg.kcfg import KCFG
-from pyk.kcfg.tui import KCFGViewer
+from pyk.kcfg.semantics import KCFGSemantics
+from pyk.kore.kompiled import KompiledKore
+from pyk.kore.rpc import KoreClient, kore_server
+from pyk.ktool.kprint import gen_glr_parser
 from pyk.ktool.kprove import KProve
 from pyk.ktool.krun import KRun, KRunOutput, _krun
-from pyk.proof.show import APRProofShow
-from pyk.ktool.kprint import KPrint, gen_glr_parser
 from pyk.prelude.kbool import BOOL, notBool
 from pyk.prelude.ml import mlEqualsTrue
-from pyk.proof.proof import Proof
-from pyk.kast.pretty import paren
 from pyk.proof.reachability import APRProof, APRProver
+from pyk.proof.show import APRProofShow
+from pyk.utils import single
 
 if TYPE_CHECKING:
     from subprocess import CompletedProcess
     from typing import Final
+
     from pyk.cterm.cterm import CTerm
-    from pyk.kast.pretty import SymbolTable
     from pyk.kast.inner import KInner
+    from pyk.kast.outer import KDefinition
+    from pyk.kore.rpc import FallbackReason
+    from pyk.ktool.kprint import KPrint
+    from pyk.utils import BugReport
 
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -252,7 +250,6 @@ def legacy_explore(
                     kompiled_kore=KompiledKore.load(kprint.definition_dir),
                 )
                 yield KCFGExplore(
-                    kprint=kprint,
                     # kore_client=client,
                     kcfg_semantics=kcfg_semantics,
                     id=id,
@@ -268,7 +265,6 @@ def legacy_explore(
                 kompiled_kore=KompiledKore.load(kprint.definition_dir),
             )
             yield KCFGExplore(
-                kprint=kprint,
                 kcfg_semantics=kcfg_semantics,
                 id=id,
                 cterm_symbolic=cterm_symbolic,

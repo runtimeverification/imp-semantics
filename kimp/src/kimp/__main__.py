@@ -6,8 +6,8 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
 
-from pyk.cli_utils import dir_path, file_path
-from pyk.ktool.kprint import KAstInput, KAstOutput
+from pyk.cli.utils import dir_path, file_path
+from pyk.ktool.kprint import KAstOutput
 from pyk.ktool.krun import KRunOutput
 
 from .kimp import KIMP
@@ -98,7 +98,8 @@ def exec_prove(
         )
     except ValueError as err:
         _LOGGER.critical(err.args)
-        exit(1)
+        # exit(1)
+        raise
     except RuntimeError as err:
         if ignore_return_code:
             msg, stdout, stderr = err.args
