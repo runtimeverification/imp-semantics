@@ -56,6 +56,10 @@ cov-unit: test-unit
 cov-integration: TEST_ARGS += --cov-report=html:cov-integration-html $(COV_ARGS)
 cov-integration: test-integration
 
+.PHONY: install
+install: poetry-install
+	$(POETRY) build
+	pip install dist/*.whl
 
 # Checks and formatting
 
