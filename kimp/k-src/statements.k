@@ -7,7 +7,7 @@ module STATEMENTS-SYNTAX
 
   syntax Stmt ::= Id "=" Expr ";"                    [strict(2)]
                 | "if" "(" Expr ")" Stmt "else" Stmt [strict(1), avoid] // dangling else
-                | "if" "(" Expr ")" Stmt             [strict(1)]
+                | "if" "(" Expr ")" Stmt
                 | "while" "(" Expr ")" Stmt          // not strict!
                 // blocks of statements
                 | "{" Stmt "}"
