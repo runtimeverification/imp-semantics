@@ -12,7 +12,7 @@ authors = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-pyk = { git = "https://github.com/runtimeverification/pyk.git", branch="subproofs" }
+pyk = { git = "https://github.com/runtimeverification/pyk.git", tag="v0.1.679" }
 
 [tool.poetry.scripts]
 kimp = "kimp.__main__:main"

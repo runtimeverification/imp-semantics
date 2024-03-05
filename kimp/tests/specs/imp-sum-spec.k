@@ -13,10 +13,10 @@ module IMP-SUM-SPEC
         .K
       ...
       </k>
-    <state>
+    <env>
         $n |-> (N:Int => 0)
         $s |-> (S:Int => S +Int ((N +Int 1) *Int N /Int 2))
-    </state>
+    </env>
   requires N >=Int 0
 
   claim [two-sum-spec]:
@@ -33,12 +33,12 @@ module IMP-SUM-SPEC
         .K
       ...
       </k>
-    <state>
+    <env>
         $n |-> (N:Int => 0)
         $m |-> (M:Int => 0)
         $s1 |-> (S1:Int => S1 +Int ((N +Int 1) *Int N /Int 2))
         $s2 |-> (S2:Int => S2 +Int ((M +Int 1) *Int M /Int 2))
-    </state>
+    </env>
   requires N >=Int 0
    andBool M >=Int 0
 

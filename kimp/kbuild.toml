@@ -5,9 +5,9 @@ source = "k-src"
 
 [targets.llvm]
 backend = "llvm"
-main-file = "imp.k"
-main-module = "IMP"
-syntax-module = "IMP-SYNTAX"
+main-file = "statements.k"
+main-module = "STATEMENTS"
+syntax-module = "STATEMENTS-SYNTAX"
 
 [targets.haskell]
 backend = "haskell"
