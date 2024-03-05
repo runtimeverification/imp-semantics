@@ -4,6 +4,7 @@ import logging
 import subprocess
 from argparse import ArgumentParser
 from pathlib import Path
+import os
 from typing import TYPE_CHECKING, Any, Final
 
 from pyk.cli.utils import dir_path, file_path
@@ -19,18 +20,33 @@ _LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
 
 
-def kbuild_definition_dir(target: str) -> Path:
-    proc_result = subprocess.run(
-        ['poetry', 'run', 'kbuild', 'which', target],
-        capture_output=True,
-    )
-    if proc_result.returncode:
-        _LOGGER.critical(
-            f'Could not find kbuild definition for target {target}. Run kbuild kompile {target}, or specify --definition-dir.'
+def find_definiton_dir(target: str) -> Path:
+    '''
+    Find the kompiled definiton directory for a `kbuild` target target:
+    * if the KIMP_${target.upper}_DIR is set --- use that
+    * otherwise ask `kbuild`
+    '''
+
+    def kbuild_definition_dir(target: str) -> Path:
+        proc_result = subprocess.run(
+            ['poetry', 'run', 'kbuild', 'which', target],
+            capture_output=True,
         )
-        exit(proc_result.returncode)
+        if proc_result.returncode:
+            _LOGGER.critical(
+                f'Could not find kbuild definition for target {target}. Run kbuild kompile {target}, or specify --definition-dir.'
+            )
+            exit(proc_result.returncode)
+        else:
+            return Path(proc_result.stdout.splitlines()[0].decode())
+
+    env_definition_dir = os.environ.get(f'KIMP_{target.upper()}_DIR')
+    if env_definition_dir:
+        path = Path(env_definition_dir).resolve()
+        _LOGGER.info(f'Using kompiled definiton at {str(path)}')
+        return path
     else:
-        return Path(proc_result.stdout.splitlines()[0].decode())
+        return kbuild_definition_dir(target)
 
 
 def main() -> None:
@@ -55,7 +71,7 @@ def exec_run(
 ) -> None:
     krun_output = KRunOutput[output.upper()]
 
-    definition_dir = str(kbuild_definition_dir('llvm'))
+    definition_dir = str(find_definiton_dir('llvm'))
 
     kimp = KIMP(definition_dir, definition_dir)
 
@@ -83,7 +99,7 @@ def exec_prove(
     ignore_return_code: bool = False,
     **kwargs: Any,
 ) -> None:
-    definition_dir = str(kbuild_definition_dir('haskell'))
+    definition_dir = str(find_definiton_dir('haskell'))
 
     kimp = KIMP(definition_dir, definition_dir)
 
