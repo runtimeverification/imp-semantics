@@ -31,6 +31,12 @@ RUN pip install poetry && \
     make build && \
     pip install dist/*.whl
 
+# install kimp and set env vars for it
+COPY --chown=k-user:k-group ./kimp /home/k-user/kimp-src
+RUN make -C /home/k-user/kimp-src build && make -C /home/k-user/kimp-src install
+ENV KIMP_LLVM_DIR=/home/k-user/kimp-src/kdist/v${K_VERSION}/llvm       \
+    KIMP_HASKELL_DIR=/home/k-user/kimp-src/kdist/v${K_VERSION}/haskell \
+    KIMP_K_SRC=/home/k-user/kimp-src/k-src
 
 ENTRYPOINT ["fixuid", "-q"]
 
