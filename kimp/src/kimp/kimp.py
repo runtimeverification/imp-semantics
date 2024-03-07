@@ -1,4 +1,9 @@
 from __future__ import annotations
+from pyk.kast.manip import remove_generated_cells
+from pyk.kast.pretty import SymbolTable, paren
+from pyk.kcfg.kcfg import KCFG
+
+from pyk.kcfg.show import NodePrinter
 
 __all__ = ['KIMP']
 
@@ -11,6 +16,7 @@ from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Iterable, Iterator, Optional, Union, final
 
 from pyk.cli.utils import check_dir_path, check_file_path
+from pyk.cterm.cterm import CTerm
 from pyk.cterm.symbolic import CTermSymbolic
 from pyk.kast.inner import KApply, KSequence, KVariable
 from pyk.kcfg.explore import KCFGExplore
@@ -21,16 +27,16 @@ from pyk.ktool.kprint import gen_glr_parser
 from pyk.ktool.kprove import KProve
 from pyk.ktool.krun import KRun, KRunOutput, _krun
 from pyk.prelude.kbool import BOOL, notBool
-from pyk.prelude.ml import mlEqualsTrue
+from pyk.prelude.ml import mlAnd, mlEqualsTrue
 from pyk.proof.reachability import APRProof, APRProver
-from pyk.proof.show import APRProofShow
+from pyk.proof.show import APRProofNodePrinter, APRProofShow
+from pyk.proof.tui import APRProofViewer
 from pyk.utils import single
 
 if TYPE_CHECKING:
     from subprocess import CompletedProcess
     from typing import Final
 
-    from pyk.cterm.cterm import CTerm
     from pyk.kast.inner import KInner
     from pyk.kast.outer import KDefinition
     from pyk.kore.rpc import FallbackReason
@@ -104,7 +110,7 @@ class KIMP:
         haskell_dir = Path(haskell_dir)
         check_dir_path(haskell_dir)
 
-        proof_dir = Path('.') / '.kimp' / 'ag_proofs'
+        proof_dir = Path('.') / '.kimp' / 'proofs'
         proof_dir.mkdir(exist_ok=True, parents=True)
 
         object.__setattr__(self, 'llvm_dir', llvm_dir)
@@ -114,7 +120,9 @@ class KIMP:
 
     @cached_property
     def kprove(self) -> KProve:
-        kprove = KProve(definition_dir=self.haskell_dir, use_directory=self.proof_dir)
+        kprove = KProve(
+            definition_dir=self.haskell_dir, use_directory=self.proof_dir, patch_symbol_table=KIMP._patch_symbol_table
+        )
         return kprove
 
     @cached_property
@@ -163,6 +171,7 @@ class KIMP:
         claim_id: str,
         max_iterations: int,
         max_depth: int,
+        reinit: bool,
     ) -> None:
         include_dirs = [Path(include) for include in includes]
 
@@ -171,14 +180,18 @@ class KIMP:
         )
         spec_label = f'{spec_module}.{claim_id}'
 
-        proofs = APRProof.from_spec_modules(
-            self.kprove.definition,
-            spec_modules,
-            spec_labels=[spec_label],
-            logs={},
-            proof_dir=self.proof_dir,
-        )
-        proof = single([p for p in proofs if p.id == spec_label])
+        if not reinit and APRProof.proof_data_exists(spec_label, self.proof_dir):
+            # load an existing proof (to continue work in it)
+            proof = APRProof.read_proof_data(proof_dir=self.proof_dir, id=f'{spec_module}.{claim_id}')
+        else:
+            # ignore existing proof data and reinitilize it from a claim
+            proofs = APRProof.from_spec_modules(
+                self.kprove.definition,
+                spec_modules,
+                spec_labels=[spec_label],
+                logs={},
+            )
+            proof = single([p for p in proofs if p.id == spec_label])
 
         with legacy_explore(
             self.kprove,
@@ -188,24 +201,27 @@ class KIMP:
             prover = APRProver(proof, kcfg_explore=kcfg_explore, execute_depth=max_depth, cut_point_rules=['IMP.while'])
             prover.advance_proof(max_iterations=max_iterations)
 
-            proof_show = APRProofShow(self.kprove)
+            proof_show = APRProofShow(self.kprove, node_printer=KIMPNodePrinter(kimp=self))
             res_lines = proof_show.show(
                 proof,
             )
-            print(proof.status)
-            print('\n'.join(res_lines))
+            print(proof.summary)
+            print(f'Proof data saved to {proof.proof_subdir}')
+            # print('\n'.join(res_lines))
 
+    def view_kcfg(
+        self,
+        spec_module: str,
+        claim_id: str,
+    ) -> None:
+        proof = APRProof.read_proof_data(proof_dir=self.proof_dir, id=f'{spec_module}.{claim_id}')
+        # proof = read_proof(f'{spec_module}.{claim_id}', proof_dir=self.proof_dir)
+        kcfg_viewer = APRProofViewer(proof, self.kprove, node_printer=KIMPNodePrinter(kimp=self))
+        kcfg_viewer.run()
 
-#     def view_kcfg(
-#         self,
-#         spec_module: str,
-#         claim_id: str,
-#         **kwargs: Any,
-#     ) -> None:
-#         proof = read_proof(f'{spec_module}.{claim_id}', proof_dir=self.proof_dir)
-#         if type(proof) is APRProof:
-#             kcfg_viewer = KCFGViewer(proof.kcfg, self.kprove)
-#             kcfg_viewer.run()
+    @classmethod
+    def _patch_symbol_table(cls, symbol_table: SymbolTable) -> None:
+        symbol_table['_Map_'] = paren(lambda m1, m2: m1 + '\n' + m2)
 
 
 @contextmanager
@@ -269,3 +285,22 @@ def legacy_explore(
                 id=id,
                 cterm_symbolic=cterm_symbolic,
             )
+
+
+class KIMPNodePrinter(NodePrinter):
+    kimp: KIMP
+
+    def __init__(self, kimp: KIMP):
+        NodePrinter.__init__(self, kimp.kprove)
+        self.kimp = kimp
+
+    def print_node(self, kcfg: KCFG, node: KCFG.Node) -> list[str]:
+        ret_strs = super().print_node(kcfg, node)
+        config = remove_generated_cells(node.cterm.config)
+        # pretty-print the configuration
+        assert type(config) is KApply
+        for arg in config.args[:-1]:
+            ret_strs += self.kimp.kprove.pretty_print(arg).splitlines()
+        # pretty-print the constraints
+        ret_strs += self.kimp.kprove.pretty_print(mlAnd(node.cterm.constraints)).splitlines()
+        return ret_strs

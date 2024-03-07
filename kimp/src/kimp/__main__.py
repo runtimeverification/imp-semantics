@@ -111,6 +111,7 @@ def exec_prove(
     max_iterations: int,
     max_depth: int,
     ignore_return_code: bool = False,
+    reinit: bool = False,
     **kwargs: Any,
 ) -> None:
     definition_dir = str(find_definiton_dir('haskell'))
@@ -126,6 +127,7 @@ def exec_prove(
             max_iterations=max_iterations,
             max_depth=max_depth,
             includes=[k_src_dir],
+            reinit=reinit,
         )
     except ValueError as err:
         _LOGGER.critical(err.args)
@@ -149,18 +151,20 @@ def exec_prove(
 #     inline_nodes: bool = False,
 #     **kwargs: Any,
 # ) -> None:
+#     definition_dir = str(find_definiton_dir('haskell'))
 #     kimp = KIMP(definition_dir, definition_dir)
 #     kimp.show_kcfg(spec_module, claim_id, to_module=to_module, inline_nodes=inline_nodes)
 
 
-# def exec_view_kcfg(
-#     definition_dir: str,
-#     spec_module: str,
-#     claim_id: str,
-#     **kwargs: Any,
-# ) -> None:
-#     kimp = KIMP(definition_dir, definition_dir)
-#     kimp.view_kcfg(spec_module, claim_id)
+def exec_view_kcfg(
+    definition_dir: str,
+    spec_module: str,
+    claim_id: str,
+    **kwargs: Any,
+) -> None:
+    definition_dir = str(find_definiton_dir('haskell'))
+    kimp = KIMP(definition_dir, definition_dir)
+    kimp.view_kcfg(spec_module, claim_id)
 
 
 def create_argument_parser() -> ArgumentParser:
@@ -214,7 +218,7 @@ def create_argument_parser() -> ArgumentParser:
     explore_args.add_argument(
         '--max-iterations',
         dest='max_iterations',
-        default=20,
+        default=1000,
         type=int,
         help='Store every Nth state in the CFG for inspection.',
     )
