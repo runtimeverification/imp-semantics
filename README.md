@@ -8,7 +8,16 @@ KIMP consists of two major components:
 * The K definition of IMP;
 * The `kimp` command-line tool and Python package, that acts as a frontend to the K definition.
 
-## Build instructions
+## Trying it out in `docker` (EASY)
+
+We have prepared a docker image that allows both using `kimp` as-is and hacking on it. Use the following to start a container with an interactive shell:
+
+```
+```
+
+If everything is up and running, feel free to jump straight to the `Usage` section below. If you don't want to use `docker`, read the next section to build `kimp` manually.
+
+## Installation instructions (ADVANCED)
 
 ### Prerequisites
 
@@ -23,18 +32,70 @@ To build the whole codebase, inclusing the `kimp` CLI and the K definition with 
 make build
 ```
 
-### Accessing compiled K definitions
+The `kimp` executable is a relatively thin wrapper for a number of generic K tools. These tools need access to the output of the K compiler that were produced at the previous step. The most robust way to point `kimp` to the K compiler output is by setting the following three environment variables:
 
-The definitions are built with `kbuild`, which places the compiled definitions in `~/.kbuild`. To get an exact path to the definition, use:
 ```
-poetry run kbuild which llvm # for LLVM
-poetry run kbuild which haskell # for Haskell
+export KIMP_LLVM_DIR=$(realpath ./kimp/kdist/v6.3.25/llvm)
+export KIMP_HASKELL_DIR=$(realpath ./kimp/kdist/v6.3.25/haskell)
+export KIMP_K_SRC=$(realpath ./kimp/k-src)
 ```
 
-## Usage
+### Installing
 
 After building the project, you can access the `kimp` CLI via `poetry`:
 
 ```
 poetry run kimp --help
 ```
+
+use `poetry shell` to avoid prefixing every command with `poetry run`.
+
+Alternatively, you can install `kimp` with `pip` into a virtual environment:
+
+```
+python -m venv venv
+source venv/bin/activate
+make -C kimp install # this calls pip for you
+```
+
+Within that virtual environment, you can use `kimp` directly.
+
+
+## Usage
+
+`kimp` is intended to demonstrate the two main function of the K framework:
+* running example IMP programs using K's concrete execution backend
+* proving *claims* about IMP programs by executing them with K's symbolic execution backend
+
+Run `kimp --help` to see the available commands and their arguments. Let us now give examples for both concrete executing and proving:
+
+### Concrete execution
+
+```
+kimp run examples/sumto10.imp
+```
+
+this program adds up the natural numbers up to 10 and should give the following output configuration:
+
+```
+<generatedTop>
+  <k>
+    .K
+  </k>
+  <env>
+    k |-> 11
+    n |-> 10
+    sum |-> 55
+  </env>
+</generatedTop>
+```
+
+### Symbolic execution
+
+```
+kimp prove spec
+```
+
+
+
+
