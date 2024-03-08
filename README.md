@@ -18,7 +18,7 @@ docker run --rm -it -v "$PWD":/home/k-user/workspace -u $(id -u):$(id -g) geo2a/
 
 This command will download the docker image and mount the current working directory under `~/workspace`. You will have write access to the examples from within the container.
 
-If everything is up and running, feel free to jump straight to the `Usage` section below. If you don't want to use `docker`, read the next section to build `kimp` manually.
+If everything is up and running, feel free to jump straight to the **Usage** section below. If you don't want to use `docker`, read the next section to build `kimp` manually.
 
 ## Installation instructions (ADVANCED)
 
