@@ -9,12 +9,12 @@ if (b < 0)
   b = - b;
 
 // compute a mod b
-r = a - (a / b) * b;
+r = - (a / b) * b + a;
 
 while (0 < r) {
   a = b;
   b = r;
-  r = a - (a / b) * b;
+  r = - (a / b) * b + a;
 }
 
 result = b;
