@@ -1,4 +1,4 @@
-# KIMP --- K Semantics of IMP
+# The K Semantics of IMP
 
 IMP is a toy programming language with mutable variables and sequential execution.
 
