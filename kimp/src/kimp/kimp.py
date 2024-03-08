@@ -208,6 +208,8 @@ class KIMP:
             print(proof.summary)
             print(f'Proof data saved to {proof.proof_subdir}')
             # print('\n'.join(res_lines))
+            print('To inspect the symbolic execution trace, run: ')
+            print(f'kimp view-kcfg {spec_module} {claim_id}')
 
     def view_kcfg(
         self,
