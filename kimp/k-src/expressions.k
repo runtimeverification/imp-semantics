@@ -1,12 +1,9 @@
 module VALUE-SYNTAX
   imports UNSIGNED-INT-SYNTAX
-  imports STRING-SYNTAX
   imports BOOL-SYNTAX
 
-  syntax Value ::= "(" ")"
-                 | Int
+  syntax Value ::= Int
                  | Bool
-                 | String
 
   syntax KResult ::= Value
 endmodule
@@ -30,7 +27,7 @@ module EXPRESSIONS-SYNTAX
                     | Expr ">=" Expr [group(comp), seqstrict, non-assoc]
                     | Expr ">"  Expr [group(comp), seqstrict, non-assoc]
                     | Expr "<=" Expr [group(comp), seqstrict, non-assoc]
-                    | Expr "<"  Expr [group(comp), seqstrict, non-assoc]
+                    | Expr "<"  Expr [group(comp), strict, non-assoc]
 
   syntax Expr     ::= "!" Expr       [group(unary), strict, non-assoc]
                     > Expr "&&" Expr [group(bool), seqstrict, left]
@@ -41,7 +38,7 @@ module EXPRESSIONS-SYNTAX
 endmodule
 
 module EXPRESSIONS
-  imports EXPRESSIONS-SYNTAX
+  imports EXPRESSIONS-SYNTAX // also imports VALUE-SYNTAX (transitive)
   imports INT
   imports BOOL
 
