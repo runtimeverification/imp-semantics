@@ -175,9 +175,10 @@ class KIMP:
     ) -> None:
         include_dirs = [Path(include) for include in includes]
 
-        spec_modules = self.kprove.get_claim_modules(
-            Path(spec_file), spec_module_name=spec_module, include_dirs=include_dirs
+        claims = self.kprove.get_claims(
+            Path(spec_file), spec_module_name=spec_module, claim_labels=[claim_id], include_dirs=include_dirs
         )
+        claim = single(claims)
         spec_label = f'{spec_module}.{claim_id}'
 
         if not reinit and APRProof.proof_data_exists(spec_label, self.proof_dir):
@@ -185,13 +186,7 @@ class KIMP:
             proof = APRProof.read_proof_data(proof_dir=self.proof_dir, id=f'{spec_module}.{claim_id}')
         else:
             # ignore existing proof data and reinitilize it from a claim
-            proofs = APRProof.from_spec_modules(
-                self.kprove.definition,
-                spec_modules,
-                spec_labels=[spec_label],
-                logs={},
-            )
-            proof = single([p for p in proofs if p.id == spec_label])
+            proof = APRProof.from_claim(self.kprove.definition, claim=claim, logs={}, proof_dir=self.proof_dir)
 
         with legacy_explore(
             self.kprove,
@@ -201,13 +196,21 @@ class KIMP:
             prover = APRProver(proof, kcfg_explore=kcfg_explore, execute_depth=max_depth, cut_point_rules=['IMP.while'])
             prover.advance_proof(max_iterations=max_iterations)
 
-            proof_show = APRProofShow(self.kprove, node_printer=KIMPNodePrinter(kimp=self))
-            res_lines = proof_show.show(
-                proof,
-            )
             print(proof.summary)
-            print(f'Proof data saved to {proof.proof_subdir}')
-            # print('\n'.join(res_lines))
+            print('============================================')
+            print("What's next?: ")
+            print('============================================')
+            print('To inspect the symbolic execution trace interactively, run: ')
+            print(f'  kimp view-kcfg {spec_module} {claim_id}')
+            print('============================================')
+            print('To dump the symbolic execution trace into stdout, run: ')
+            print(f'  kimp show-kcfg {spec_module} {claim_id}')
+            print('============================================')
+            if not proof.passed:
+                print('To retry the failed/pending proof, run : ')
+                print(f'  kimp prove {spec_file} {spec_module} {claim_id}')
+            print('To start the proof from scratch: ')
+            print(f'  kimp prove --reinit {spec_file} {spec_module} {claim_id}')
 
     def view_kcfg(
         self,
@@ -215,9 +218,20 @@ class KIMP:
         claim_id: str,
     ) -> None:
         proof = APRProof.read_proof_data(proof_dir=self.proof_dir, id=f'{spec_module}.{claim_id}')
-        # proof = read_proof(f'{spec_module}.{claim_id}', proof_dir=self.proof_dir)
         kcfg_viewer = APRProofViewer(proof, self.kprove, node_printer=KIMPNodePrinter(kimp=self))
         kcfg_viewer.run()
+
+    def show_kcfg(
+        self,
+        spec_module: str,
+        claim_id: str,
+    ) -> None:
+        proof = APRProof.read_proof_data(proof_dir=self.proof_dir, id=f'{spec_module}.{claim_id}')
+        proof_show = APRProofShow(self.kprove, node_printer=KIMPNodePrinter(kimp=self))
+        res_lines = proof_show.show(
+            proof,
+        )
+        print('\n'.join(res_lines))
 
     @classmethod
     def _patch_symbol_table(cls, symbol_table: SymbolTable) -> None:
