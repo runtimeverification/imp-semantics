@@ -58,7 +58,7 @@ module CALLS
   rule <k> F(AS:Args) ~> Rest => #call(F, AS, Rest) ~> .K </k>
 
   // returning a value
-  rule return; => #return(())
+  rule return; => #return(0)
 
   rule <k> return V; ~> _ => #return(V) </k>
 
@@ -77,7 +77,7 @@ module CALLS
              // what if F has already been declared before?
              // what if there are duplicated parameters?
 
-  rule <k> #call(F, AS, Cont) => #bindArgs(AS, PS) ~> Body ~> #return(()) </k>
+  rule <k> #call(F, AS, Cont) => #bindArgs(AS, PS) ~> Body ~> #return(0) </k>
        <env> E </env>
        <functions> F |-> #function(PS, Body) ... </functions>
              // what if F is not declared?

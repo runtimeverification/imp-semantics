@@ -14,10 +14,14 @@ fun gcd_(a, b) = {
 }
 
 fun gcd(a, b) = {
-  if (a >= b)
+  if (a < 0)
+    a = - a;
+  if (b < 0)
+    b = - b;
+  if (b <= a)
     return gcd_(a, b);
   else
     return gcd_(b, a);
 }
 
-return gcd(51, 170);
+return gcd(51, -170);

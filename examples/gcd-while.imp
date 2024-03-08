@@ -1,18 +1,17 @@
 // input values
 a = 51;
-b = 170;
+b = -170;
 
-// make sure a >= b
-if (a < b) {
-  r = a;
-  a = b;
-  b = r;
-}
+// make sure 0 <= a,b
+if (a < 0)
+  a = - a;
+if (b < 0)
+  b = - b;
 
 // compute a mod b
 r = a - (a / b) * b;
 
-while (r > 0) {
+while (0 < r) {
   a = b;
   b = r;
   r = a - (a / b) * b;
