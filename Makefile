@@ -1,6 +1,5 @@
-# Latest versions at the time of writing
-K_VERSION   ?= 6.3.25
-PYK_VERSION ?= 0.1.679
+K_VERSION   ?= $(shell cat deps/k_release)
+PYK_VERSION ?= $(shell cat deps/pyk_release)
 KOMPILE     ?= $(shell which kompile)
 
 default: help
@@ -21,10 +20,12 @@ docker/.image: docker/Dockerfile.k+pyk
 K_SOURCES = $(wildcard kimp/k-src/*.k)
 TARGETS   = $(patsubst %.k,.build/%-kompiled,$(notdir $(K_SOURCES)))
 
-build: build-llvm build-haskell
+build: build-llvm build-haskell build-kimp
 
 build-llvm: have-k $(TARGETS:=-llvm)
 build-haskell: have-k $(TARGETS:=-haskell)
+build-kimp: have-k
+	$(MAKE) -C kimp build
 
 .build/%-kompiled-llvm: kimp/k-src/%.k $(K_SOURCES)
 	$(KOMPILE) --output-definition $@ $< -I kimp/k-src --backend llvm

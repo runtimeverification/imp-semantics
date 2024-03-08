@@ -4,6 +4,7 @@ import logging
 import subprocess
 from argparse import ArgumentParser
 from pathlib import Path
+import os
 from typing import TYPE_CHECKING, Any, Final
 
 from pyk.cli.utils import dir_path, file_path
@@ -19,18 +20,47 @@ _LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
 
 
-def kbuild_definition_dir(target: str) -> Path:
-    proc_result = subprocess.run(
-        ['poetry', 'run', 'kbuild', 'which', target],
-        capture_output=True,
-    )
-    if proc_result.returncode:
-        _LOGGER.critical(
-            f'Could not find kbuild definition for target {target}. Run kbuild kompile {target}, or specify --definition-dir.'
+def find_definiton_dir(target: str) -> Path:
+    '''
+    Find the kompiled definiton directory for a `kbuild` target target:
+    * if the KIMP_${target.upper}_DIR is set --- use that
+    * otherwise ask `kbuild`
+    '''
+
+    def kbuild_definition_dir(target: str) -> Path:
+        proc_result = subprocess.run(
+            ['poetry', 'run', 'kbuild', 'which', target],
+            capture_output=True,
         )
-        exit(proc_result.returncode)
+        if proc_result.returncode:
+            _LOGGER.critical(
+                f'Could not find kbuild definition for target {target}. Run kbuild kompile {target}, or specify --definition-dir.'
+            )
+            exit(proc_result.returncode)
+        else:
+            return Path(proc_result.stdout.splitlines()[0].decode())
+
+    env_definition_dir = os.environ.get(f'KIMP_{target.upper()}_DIR')
+    if env_definition_dir:
+        path = Path(env_definition_dir).resolve()
+        _LOGGER.info(f'Using kompiled definiton at {str(path)}')
+        return path
     else:
-        return Path(proc_result.stdout.splitlines()[0].decode())
+        return kbuild_definition_dir(target)
+
+
+def find_k_src_dir() -> Path:
+    '''
+    A heuristic way to find the the k-src dir with the K sources is located:
+    * if KIMP_K_SRC environment variable is set --- use that
+    * otherwise, use ./k-src and hope it works
+    '''
+    ksrc_dir = os.environ.get(f'KIMP_K_SRC')
+    if ksrc_dir:
+        ksrc_dir = Path(ksrc_dir).resolve()
+    else:
+        ksrc_dir = Path('./k-src')
+    return ksrc_dir
 
 
 def main() -> None:
@@ -55,7 +85,7 @@ def exec_run(
 ) -> None:
     krun_output = KRunOutput[output.upper()]
 
-    definition_dir = str(kbuild_definition_dir('llvm'))
+    definition_dir = str(find_definiton_dir('llvm'))
 
     kimp = KIMP(definition_dir, definition_dir)
 
@@ -81,9 +111,11 @@ def exec_prove(
     max_iterations: int,
     max_depth: int,
     ignore_return_code: bool = False,
+    reinit: bool = False,
     **kwargs: Any,
 ) -> None:
-    definition_dir = str(kbuild_definition_dir('haskell'))
+    definition_dir = str(find_definiton_dir('haskell'))
+    k_src_dir = str(find_k_src_dir())
 
     kimp = KIMP(definition_dir, definition_dir)
 
@@ -94,7 +126,8 @@ def exec_prove(
             claim_id=claim_id,
             max_iterations=max_iterations,
             max_depth=max_depth,
-            includes=['k-src'],  # TODO this needs to be more rubust
+            includes=[k_src_dir],
+            reinit=reinit,
         )
     except ValueError as err:
         _LOGGER.critical(err.args)
@@ -118,18 +151,20 @@ def exec_prove(
 #     inline_nodes: bool = False,
 #     **kwargs: Any,
 # ) -> None:
+#     definition_dir = str(find_definiton_dir('haskell'))
 #     kimp = KIMP(definition_dir, definition_dir)
 #     kimp.show_kcfg(spec_module, claim_id, to_module=to_module, inline_nodes=inline_nodes)
 
 
-# def exec_view_kcfg(
-#     definition_dir: str,
-#     spec_module: str,
-#     claim_id: str,
-#     **kwargs: Any,
-# ) -> None:
-#     kimp = KIMP(definition_dir, definition_dir)
-#     kimp.view_kcfg(spec_module, claim_id)
+def exec_view_kcfg(
+    definition_dir: str,
+    spec_module: str,
+    claim_id: str,
+    **kwargs: Any,
+) -> None:
+    definition_dir = str(find_definiton_dir('haskell'))
+    kimp = KIMP(definition_dir, definition_dir)
+    kimp.view_kcfg(spec_module, claim_id)
 
 
 def create_argument_parser() -> ArgumentParser:
@@ -183,7 +218,7 @@ def create_argument_parser() -> ArgumentParser:
     explore_args.add_argument(
         '--max-iterations',
         dest='max_iterations',
-        default=20,
+        default=1000,
         type=int,
         help='Store every Nth state in the CFG for inspection.',
     )
