@@ -1,4 +1,4 @@
-# KIMP --- K Semantics of IMP
+# The K Semantics of IMP
 
 IMP is a toy programming language with mutable variables and sequential execution.
 
@@ -10,7 +10,16 @@ KIMP consists of two major components:
 
 ## Trying it out in `docker` (EASY)
 
-We have prepared a docker image that allows both using `kimp` as-is and hacking on it. Use the following to start a container with an interactive shell:
+We have prepared a docker image that allows both using `kimp` as-is and hacking on it.
+
+First off, clone the project and step into its directory:
+
+```
+git clone https://github.com/runtimeverification/imp-semantics
+cd imp-semantics
+```
+
+Use the following to start a container with an interactive shell:
 
 ```
 docker run --rm -it -v "$PWD":/home/k-user/workspace -u $(id -u):$(id -g) geo2a/bob24:latest /bin/bash
@@ -38,8 +47,9 @@ make build
 The `kimp` executable is a relatively thin wrapper for a number of generic K tools. These tools need access to the output of the K compiler that were produced at the previous step. The most robust way to point `kimp` to the K compiler output is by setting the following three environment variables:
 
 ```
-export KIMP_LLVM_DIR=$(realpath ./kimp/kdist/v6.3.25/llvm)
-export KIMP_HASKELL_DIR=$(realpath ./kimp/kdist/v6.3.25/haskell)
+export K_VERSION=$(cat deps/k_release)
+export KIMP_LLVM_DIR=$(realpath ./kimp/kdist/v${K_VERSION}/llvm)
+export KIMP_HASKELL_DIR=$(realpath ./kimp/kdist/v${K_VERSION}/haskell)
 export KIMP_K_SRC=$(realpath ./kimp/k-src)
 ```
 
