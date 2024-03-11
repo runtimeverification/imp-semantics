@@ -25,7 +25,7 @@ Use the following to start a container with an interactive shell:
 docker run --rm -it -v "$PWD":/home/k-user/workspace -u $(id -u):$(id -g) geo2a/bob24:latest /bin/bash
 ```
 
-This command will download the docker image and mount the current working directory under `~/workspace`. You will have write access to the examples from within the container.
+This command will download the docker image and mount the current working directory under `~/workspace`, ensuring you can work on the examples and have them transparently available in the container.
 
 If everything is up and running, feel free to jump straight to the **Usage** section below. If you don't want to use `docker`, read the next section to build `kimp` manually.
 
