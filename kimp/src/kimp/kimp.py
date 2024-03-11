@@ -193,7 +193,13 @@ class KIMP:
             kcfg_semantics=ImpSemantics(self.kprove.definition),
             id=spec_label,
         ) as kcfg_explore:
-            prover = APRProver(proof, kcfg_explore=kcfg_explore, execute_depth=max_depth, cut_point_rules=['IMP.while'])
+            prover = APRProver(
+                proof,
+                kcfg_explore=kcfg_explore,
+                execute_depth=max_depth,
+                cut_point_rules=['STATEMENTS-RULES.while'],
+                terminal_rules=['STATEMENTS-RULES.done'],
+            )
             prover.advance_proof(max_iterations=max_iterations)
 
             print(proof.summary)
