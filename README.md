@@ -16,6 +16,7 @@ First off, clone the project and step into its directory:
 
 ```
 git clone https://github.com/runtimeverification/imp-semantics
+git checkout bob24
 cd imp-semantics
 ```
 
