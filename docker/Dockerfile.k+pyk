@@ -38,6 +38,7 @@ ENV KIMP_LLVM_DIR=/home/k-user/kimp-src/kdist/v${K_VERSION}/llvm       \
     KIMP_HASKELL_DIR=/home/k-user/kimp-src/kdist/v${K_VERSION}/haskell \
     KIMP_K_SRC=/home/k-user/kimp-src/k-src
 
+WORKDIR /home/k-user/workspace
 ENTRYPOINT ["fixuid", "-q"]
 
 CMD printf "%s\n" \
