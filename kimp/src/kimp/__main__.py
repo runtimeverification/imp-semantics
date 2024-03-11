@@ -143,17 +143,15 @@ def exec_prove(
             raise
 
 
-# def exec_show_kcfg(
-#     definition_dir: str,
-#     spec_module: str,
-#     claim_id: str,
-#     to_module: bool = False,
-#     inline_nodes: bool = False,
-#     **kwargs: Any,
-# ) -> None:
-#     definition_dir = str(find_definiton_dir('haskell'))
-#     kimp = KIMP(definition_dir, definition_dir)
-#     kimp.show_kcfg(spec_module, claim_id, to_module=to_module, inline_nodes=inline_nodes)
+def exec_show_kcfg(
+    definition_dir: str,
+    spec_module: str,
+    claim_id: str,
+    **kwargs: Any,
+) -> None:
+    definition_dir = str(find_definiton_dir('haskell'))
+    kimp = KIMP(definition_dir, definition_dir)
+    kimp.show_kcfg(spec_module, claim_id)
 
 
 def exec_view_kcfg(

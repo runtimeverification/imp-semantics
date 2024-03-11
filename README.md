@@ -1,4 +1,4 @@
-# KIMP --- K Semantics of IMP
+# The K Semantics of IMP
 
 IMP is a toy programming language with mutable variables and sequential execution.
 
@@ -10,12 +10,24 @@ KIMP consists of two major components:
 
 ## Trying it out in `docker` (EASY)
 
-We have prepared a docker image that allows both using `kimp` as-is and hacking on it. Use the following to start a container with an interactive shell:
+We have prepared a docker image that allows both using `kimp` as-is and hacking on it.
+
+First off, clone the project and step into its directory:
 
 ```
+git clone https://github.com/runtimeverification/imp-semantics
+cd imp-semantics
 ```
 
-If everything is up and running, feel free to jump straight to the `Usage` section below. If you don't want to use `docker`, read the next section to build `kimp` manually.
+Use the following to start a container with an interactive shell:
+
+```
+docker run --rm -it -v "$PWD":/home/k-user/workspace -u $(id -u):$(id -g) geo2a/bob24:latest /bin/bash
+```
+
+This command will download the docker image and mount the current working directory under `~/workspace`. You will have write access to the examples from within the container.
+
+If everything is up and running, feel free to jump straight to the **Usage** section below. If you don't want to use `docker`, read the next section to build `kimp` manually.
 
 ## Installation instructions (ADVANCED)
 
@@ -35,8 +47,9 @@ make build
 The `kimp` executable is a relatively thin wrapper for a number of generic K tools. These tools need access to the output of the K compiler that were produced at the previous step. The most robust way to point `kimp` to the K compiler output is by setting the following three environment variables:
 
 ```
-export KIMP_LLVM_DIR=$(realpath ./kimp/kdist/v6.3.25/llvm)
-export KIMP_HASKELL_DIR=$(realpath ./kimp/kdist/v6.3.25/haskell)
+export K_VERSION=$(cat deps/k_release)
+export KIMP_LLVM_DIR=$(realpath ./kimp/kdist/v${K_VERSION}/llvm)
+export KIMP_HASKELL_DIR=$(realpath ./kimp/kdist/v${K_VERSION}/haskell)
 export KIMP_K_SRC=$(realpath ./kimp/k-src)
 ```
 
@@ -71,6 +84,8 @@ Run `kimp --help` to see the available commands and their arguments. Let us now 
 
 ### Concrete execution
 
+The K Framework generates an LLVM interpreter from the language semantics. Let is see what it does on a simple example program:
+
 ```
 kimp run examples/sumto10.imp
 ```
@@ -92,9 +107,24 @@ this program adds up the natural numbers up to 10 and should give the following 
 
 ### Symbolic execution
 
+The K Framework is equipped with a symbolic execution backend that can be used to prove properties of programs. The properties to prove are formulated as K claims, and are essentially statements that one state always rewrites to another state if certain conditions hold. An example K claim that formulates an inductive invariant about the summation program we've executed before can be found in `examples/specs/imp-sum-spec.k`. Let us ask the prover to check this claim:
+
 ```
-kimp prove spec
+kimp prove examples/specs/imp-sum-spec.k IMP-SUM-SPEC sum-spec
 ```
+
+That command would run for some time and output the symbolic execution trace to a file upon completion. We can pretty-print the trace:
+
+```
+kimp show-kcfg IMP-SUM-SPEC sum-spec
+```
+
+or even explore it interactively in a terminal user interface
+
+```
+kimp view-kcfg IMP-SUM-SPEC sum-spec
+```
+
 
 
 
