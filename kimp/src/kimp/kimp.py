@@ -1,5 +1,5 @@
 from __future__ import annotations
-from pyk.kast.manip import remove_generated_cells
+from pyk.kast.manip import remove_generated_cells, get_cell
 from pyk.kast.pretty import SymbolTable, paren
 from pyk.kcfg.kcfg import KCFG
 
@@ -19,6 +19,7 @@ from pyk.cli.utils import check_dir_path, check_file_path
 from pyk.cterm.cterm import CTerm
 from pyk.cterm.symbolic import CTermSymbolic
 from pyk.kast.inner import KApply, KSequence, KVariable
+from pyk.kast.manip import ml_pred_to_bool
 from pyk.kcfg.explore import KCFGExplore
 from pyk.kcfg.semantics import KCFGSemantics
 from pyk.kore.kompiled import KompiledKore
@@ -316,11 +317,16 @@ class KIMPNodePrinter(NodePrinter):
 
     def print_node(self, kcfg: KCFG, node: KCFG.Node) -> list[str]:
         ret_strs = super().print_node(kcfg, node)
-        config = remove_generated_cells(node.cterm.config)
+        config = get_cell(remove_generated_cells(node.cterm.config), "K_CELL")
+        env = get_cell(remove_generated_cells(node.cterm.config), "ENV_CELL")
         # pretty-print the configuration
-        assert type(config) is KApply
-        for arg in config.args[:-1]:
-            ret_strs += self.kimp.kprove.pretty_print(arg).splitlines()
+        ret_strs += self.kimp.kprove.pretty_print(config).splitlines()
+        ret_strs += ["env:"]
+        ret_strs += ["  " + l.replace("( ", "").replace(" )", "") for l in self.kimp.kprove.pretty_print(env).splitlines()]
         # pretty-print the constraints
-        ret_strs += self.kimp.kprove.pretty_print(mlAnd(node.cterm.constraints)).splitlines()
+        constraints = [ml_pred_to_bool(c) for c in node.cterm.constraints]
+        if len(constraints) > 0:
+            ret_strs += ["constraints:"]
+            for c in constraints:
+                ret_strs.append("  " + self.kimp.kprove.pretty_print(c))
         return ret_strs
