@@ -16,7 +16,7 @@ First off, clone the project and step into its directory:
 
 ```
 git clone https://github.com/runtimeverification/imp-semantics
-git checkout bob24
+git checkout bob2024
 cd imp-semantics
 ```
 
@@ -125,8 +125,3 @@ or even explore it interactively in a terminal user interface
 ```
 kimp view-kcfg IMP-SUM-SPEC sum-spec
 ```
-
-
-
-
-
