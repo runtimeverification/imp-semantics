@@ -1,6 +1,7 @@
 POETRY     := poetry
 POETRY_RUN := $(POETRY) run
 
+default: build
 
 .PHONY: clean
 clean:
