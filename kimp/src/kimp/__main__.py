@@ -5,10 +5,11 @@ import subprocess
 from argparse import ArgumentParser
 from pathlib import Path
 import os
+from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Final
 
 from pyk.cli.utils import dir_path, file_path
-from pyk.ktool.kprint import KAstOutput
+from pyk.ktool.kprint import KAstOutput, gen_glr_parser
 from pyk.ktool.krun import KRunOutput
 
 from .kimp import KIMP
@@ -79,20 +80,35 @@ def main() -> None:
 def exec_run(
     input_file: str,
     definition_dir: str,
+    input_term: str | None = None,
     output: str = 'none',
     ignore_return_code: bool = False,
     **kwargs: Any,
 ) -> None:
     krun_output = KRunOutput[output.upper()]
 
-    definition_dir = str(find_definiton_dir('llvm'))
-
-    kimp = KIMP(definition_dir, definition_dir)
+    imp_parser = None
+    if definition_dir is None:
+        definition_dir_path = find_definiton_dir('llvm')
+        imp_parser = definition_dir_path / 'parser_Stmt_STATEMENTS-SYNTAX'
+        if not imp_parser.is_file():
+            imp_parser = gen_glr_parser(
+                imp_parser, definition_dir=definition_dir_path, module='STATEMENTS-SYNTAX', sort='Stmt'
+            )
+    else:
+        definition_dir_path = Path(definition_dir)
+    kimp = KIMP(definition_dir_path, definition_dir_path, imp_parser)
 
     try:
-        proc_res = kimp.run_program(input_file, output=krun_output)
-        if output != KAstOutput.NONE:
-            print(proc_res.stdout)
+        with NamedTemporaryFile(mode='w') as f:
+            temp_file = Path(f.name)
+            if input_term is not None:
+                temp_file.write_text(input_term)
+            else:
+                temp_file.write_text(Path(input_file).read_text())
+            proc_res = kimp.run_program(temp_file, output=krun_output)
+            if output != KAstOutput.NONE:
+                print(proc_res.stdout)
     except RuntimeError as err:
         if ignore_return_code:
             msg, stdout, stderr = err.args
@@ -114,7 +130,8 @@ def exec_prove(
     reinit: bool = False,
     **kwargs: Any,
 ) -> None:
-    definition_dir = str(find_definiton_dir('haskell'))
+    if definition_dir is None:
+        definition_dir = str(find_definiton_dir('haskell'))
     k_src_dir = str(find_k_src_dir())
 
     kimp = KIMP(definition_dir, definition_dir)
@@ -226,10 +243,17 @@ def create_argument_parser() -> ArgumentParser:
 
     # Run
     run_subparser = command_parser.add_parser('run', help='Run an IMP program', parents=[shared_args])
-    run_subparser.add_argument(
-        'input_file',
+    input_group = run_subparser.add_mutually_exclusive_group(required=True)
+    input_group.add_argument(
+        '--input-file',
         type=file_path,
         help='Path to .imp file',
+    )
+    input_group.add_argument(
+        '--input-term',
+        dest='input_term',
+        type=str,
+        help='Program to run, as a literal string',
     )
     run_subparser.add_argument(
         '--output',

@@ -100,13 +100,9 @@ class KIMP:
     imp_parser: Path
     proof_dir: Path
 
-    def __init__(self, llvm_dir: Union[str, Path], haskell_dir: Union[str, Path]):
+    def __init__(self, llvm_dir: Union[str, Path], haskell_dir: Union[str, Path], imp_parser: Path | None):
         llvm_dir = Path(llvm_dir)
         check_dir_path(llvm_dir)
-
-        imp_parser = llvm_dir / 'parser_Stmt_STATEMENTS-SYNTAX'
-        if not imp_parser.is_file():
-            imp_parser = gen_glr_parser(imp_parser, definition_dir=llvm_dir, module='STATEMENTS-SYNTAX', sort='Stmt')
 
         haskell_dir = Path(haskell_dir)
         check_dir_path(haskell_dir)
@@ -116,7 +112,8 @@ class KIMP:
 
         object.__setattr__(self, 'llvm_dir', llvm_dir)
         object.__setattr__(self, 'haskell_dir', haskell_dir)
-        object.__setattr__(self, 'imp_parser', imp_parser)
+        if imp_parser is not None:
+            object.__setattr__(self, 'imp_parser', imp_parser)
         object.__setattr__(self, 'proof_dir', proof_dir)
 
     @cached_property
@@ -146,7 +143,7 @@ class KIMP:
                 output=output,
                 check=check,
                 pipe_stderr=True,
-                pmap={'PGM': str(self.imp_parser)},
+                pmap={'PGM': str(self.imp_parser)} if hasattr(self, 'imp_parser') else {},
             )
 
         def preprocess_and_run(program_file: Path, temp_file: Path) -> CompletedProcess:
@@ -322,7 +319,9 @@ class KIMPNodePrinter(NodePrinter):
         # pretty-print the configuration
         ret_strs += self.kimp.kprove.pretty_print(config).splitlines()
         ret_strs += ["env:"]
-        ret_strs += ["  " + l.replace("( ", "").replace(" )", "") for l in self.kimp.kprove.pretty_print(env).splitlines()]
+        ret_strs += [
+            "  " + l.replace("( ", "").replace(" )", "") for l in self.kimp.kprove.pretty_print(env).splitlines()
+        ]
         # pretty-print the constraints
         constraints = [ml_pred_to_bool(c) for c in node.cterm.constraints]
         if len(constraints) > 0:
