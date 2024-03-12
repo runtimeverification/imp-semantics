@@ -14,7 +14,7 @@ docker/.image: docker/Dockerfile.k+pyk
 	docker build \
 		--build-arg K_VERSION=$(K_VERSION) \
 		--build-arg PYK_VERSION=$(PYK_VERSION) \
-		-f $< -t runtimeverificationinc/imp-semantics-k:$(K_VERSION) .
+		-f $< -t geo2a/bob24:${K_VERSION} .
 	touch $@
 
 K_SOURCES = $(wildcard kimp/k-src/*.k)
