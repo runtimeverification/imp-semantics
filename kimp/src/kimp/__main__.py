@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import logging
+import os
 import subprocess
 from argparse import ArgumentParser
 from pathlib import Path
-import os
+from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Final
 
 from pyk.cli.utils import dir_path, file_path
-from pyk.ktool.kprint import KAstOutput
+from pyk.ktool.kprint import KAstOutput, gen_glr_parser
 from pyk.ktool.krun import KRunOutput
 
 from .kimp import KIMP
@@ -21,11 +22,11 @@ _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
 
 
 def find_definiton_dir(target: str) -> Path:
-    '''
+    """
     Find the kompiled definiton directory for a `kbuild` target target:
     * if the KIMP_${target.upper}_DIR is set --- use that
     * otherwise ask `kbuild`
-    '''
+    """
 
     def kbuild_definition_dir(target: str) -> Path:
         proc_result = subprocess.run(
@@ -34,7 +35,7 @@ def find_definiton_dir(target: str) -> Path:
         )
         if proc_result.returncode:
             _LOGGER.critical(
-                f'Could not find kbuild definition for target {target}. Run kbuild kompile {target}, or specify --definition-dir.'
+                f'Could not find kbuild definition for target {target}. Run kbuild kompile {target}, or specify --definition.'
             )
             exit(proc_result.returncode)
         else:
@@ -50,14 +51,14 @@ def find_definiton_dir(target: str) -> Path:
 
 
 def find_k_src_dir() -> Path:
-    '''
+    """
     A heuristic way to find the the k-src dir with the K sources is located:
     * if KIMP_K_SRC environment variable is set --- use that
     * otherwise, use ./k-src and hope it works
-    '''
-    ksrc_dir = os.environ.get(f'KIMP_K_SRC')
-    if ksrc_dir:
-        ksrc_dir = Path(ksrc_dir).resolve()
+    """
+    ksrc_dir_str = os.environ.get('KIMP_K_SRC')
+    if ksrc_dir_str is not None:
+        ksrc_dir = Path(ksrc_dir_str).resolve()
     else:
         ksrc_dir = Path('./k-src')
     return ksrc_dir
@@ -79,20 +80,35 @@ def main() -> None:
 def exec_run(
     input_file: str,
     definition_dir: str,
+    input_term: str | None = None,
     output: str = 'none',
     ignore_return_code: bool = False,
     **kwargs: Any,
 ) -> None:
     krun_output = KRunOutput[output.upper()]
 
-    definition_dir = str(find_definiton_dir('llvm'))
-
-    kimp = KIMP(definition_dir, definition_dir)
+    imp_parser = None
+    if definition_dir is None:
+        definition_dir_path = find_definiton_dir('llvm')
+        imp_parser = definition_dir_path / 'parser_Stmt_STATEMENTS-SYNTAX'
+        if not imp_parser.is_file():
+            imp_parser = gen_glr_parser(
+                imp_parser, definition_dir=definition_dir_path, module='STATEMENTS-SYNTAX', sort='Stmt'
+            )
+    else:
+        definition_dir_path = Path(definition_dir)
+    kimp = KIMP(definition_dir_path, definition_dir_path, imp_parser)
 
     try:
-        proc_res = kimp.run_program(input_file, output=krun_output)
-        if output != KAstOutput.NONE:
-            print(proc_res.stdout)
+        with NamedTemporaryFile(mode='w') as f:
+            temp_file = Path(f.name)
+            if input_term is not None:
+                temp_file.write_text(input_term)
+            else:
+                temp_file.write_text(Path(input_file).read_text())
+            proc_res = kimp.run_program(temp_file, output=krun_output)
+            if output != KAstOutput.NONE:
+                print(proc_res.stdout)
     except RuntimeError as err:
         if ignore_return_code:
             msg, stdout, stderr = err.args
@@ -114,10 +130,11 @@ def exec_prove(
     reinit: bool = False,
     **kwargs: Any,
 ) -> None:
-    definition_dir = str(find_definiton_dir('haskell'))
+    if definition_dir is None:
+        definition_dir = str(find_definiton_dir('haskell'))
     k_src_dir = str(find_k_src_dir())
 
-    kimp = KIMP(definition_dir, definition_dir)
+    kimp = KIMP(definition_dir, definition_dir, None)
 
     try:
         kimp.prove(
@@ -143,25 +160,25 @@ def exec_prove(
             raise
 
 
-def exec_show_kcfg(
+def exec_show(
     definition_dir: str,
     spec_module: str,
     claim_id: str,
     **kwargs: Any,
 ) -> None:
     definition_dir = str(find_definiton_dir('haskell'))
-    kimp = KIMP(definition_dir, definition_dir)
+    kimp = KIMP(definition_dir, definition_dir, None)
     kimp.show_kcfg(spec_module, claim_id)
 
 
-def exec_view_kcfg(
+def exec_view(
     definition_dir: str,
     spec_module: str,
     claim_id: str,
     **kwargs: Any,
 ) -> None:
     definition_dir = str(find_definiton_dir('haskell'))
-    kimp = KIMP(definition_dir, definition_dir)
+    kimp = KIMP(definition_dir, definition_dir, None)
     kimp.view_kcfg(spec_module, claim_id)
 
 
@@ -171,7 +188,7 @@ def create_argument_parser() -> ArgumentParser:
     shared_args.add_argument('--verbose', '-v', default=False, action='store_true', help='Verbose output.')
     shared_args.add_argument('--debug', default=False, action='store_true', help='Debug output.')
     shared_args.add_argument(
-        '--definition-dir',
+        '--definition',
         dest='definition_dir',
         nargs='?',
         type=dir_path,
@@ -223,38 +240,20 @@ def create_argument_parser() -> ArgumentParser:
 
     parser = ArgumentParser(prog='kimp', description='KIMP command line tool')
     command_parser = parser.add_subparsers(dest='command', required=True, help='Command to execute')
-    # Parse
-    parse_subparser = command_parser.add_parser('parse', help='Parse a .imp file', parents=[shared_args])
-    parse_subparser.add_argument(
-        'input_file',
-        type=file_path,
-        help='Path to .imp file',
-    )
-    parse_subparser.add_argument(
-        '--input',
-        dest='input',
-        type=str,
-        default='program',
-        help='Input mode',
-        choices=['program', 'binary', 'json', 'kast', 'kore'],
-        required=False,
-    )
-    parse_subparser.add_argument(
-        '--output',
-        dest='output',
-        type=str,
-        default='kore',
-        help='Output mode',
-        choices=['pretty', 'program', 'json', 'kore', 'kast', 'none'],
-        required=False,
-    )
 
     # Run
     run_subparser = command_parser.add_parser('run', help='Run an IMP program', parents=[shared_args])
-    run_subparser.add_argument(
-        'input_file',
+    input_group = run_subparser.add_mutually_exclusive_group(required=True)
+    input_group.add_argument(
+        '--input-file',
         type=file_path,
         help='Path to .imp file',
+    )
+    input_group.add_argument(
+        '--input-term',
+        dest='input_term',
+        type=str,
+        help='Program to run, as a literal string',
     )
     run_subparser.add_argument(
         '--output',
@@ -277,83 +276,16 @@ def create_argument_parser() -> ArgumentParser:
         'prove', help='Prove a K claim', parents=[shared_args, spec_file_shared_args, claim_shared_args, explore_args]
     )
 
-    # Summarize
-    _ = command_parser.add_parser(
-        'summarize',
-        help='Prove a K claim',
-        parents=[shared_args, spec_file_shared_args, claim_shared_args, explore_args],
-    )
-
-    # BMC Prove
-    bmc_prove_subparser = command_parser.add_parser(
-        'bmc-prove',
-        help='Prove a K claim with the Bounded Model-Checker',
-        parents=[shared_args, spec_file_shared_args, claim_shared_args, explore_args],
-    )
-    bmc_prove_subparser.add_argument(
-        '--bmc-depth',
-        type=int,
-        default=1,
-        help='Model checking bound',
-    )
-
-    # Refute node
-    refute_node_subparser = command_parser.add_parser(
-        'refute-node', help='Refute a node as infeasible', parents=[shared_args, claim_shared_args]
-    )
-    refute_node_subparser.add_argument(
-        '--node',
-        dest='node',
-        type=str,
-        help='node short hash',
-    )
-
-    # show refutation
-    show_refutation_subparser = command_parser.add_parser(
-        'show-refutation',
-        help='Display the equality proof of a node refutation',
-        parents=[shared_args, claim_shared_args],
-    )
-    show_refutation_subparser.add_argument(
-        '--node',
-        dest='node',
-        type=str,
-        help='node short hash',
-    )
-
-    # EQ prove
-    eq_prove_subparser = command_parser.add_parser('eq-prove', help='Prove an equality', parents=[shared_args])
-    eq_prove_subparser.add_argument(
-        'proof_id',
-        type=str,
-        help='Id of a JSON-serialized proof',
-    )
-
     # KCFG show
-    kcfg_show_subparser = command_parser.add_parser(
-        'show-kcfg', help='Display tree show of CFG', parents=[shared_args, claim_shared_args]
-    )
-    kcfg_show_subparser.add_argument(
-        '--to-module',
-        default=False,
-        action='store_true',
-        help='Display a K module containing the KCFG thus far.',
-    )
-    kcfg_show_subparser.add_argument(
-        '--inline-nodes',
-        default=False,
-        action='store_true',
-        help='Display states inline with KCFG nodes.',
-    )
-    # KCFG to dot
     command_parser.add_parser(
-        'kcfg-to-dot',
-        help='Dump the given CFG for the proof as DOT for visualization.',
+        'show', help="Display a proof's symbolic execution tree as text", parents=[shared_args, claim_shared_args]
+    )
+    # KCFG view
+    command_parser.add_parser(
+        'view',
+        help="Display a proof's symbolic execution tree in an intercative viewver",
         parents=[shared_args, claim_shared_args],
     )
-
-    # KCFG view
-    command_parser.add_parser('view-kcfg', help='Display tree view of CFG', parents=[shared_args, claim_shared_args])
 
     return parser
 
