@@ -34,7 +34,7 @@ def find_definiton_dir(target: str) -> Path:
         )
         if proc_result.returncode:
             _LOGGER.critical(
-                f'Could not find kbuild definition for target {target}. Run kbuild kompile {target}, or specify --definition-dir.'
+                f'Could not find kbuild definition for target {target}. Run kbuild kompile {target}, or specify --definition.'
             )
             exit(proc_result.returncode)
         else:
@@ -171,7 +171,7 @@ def create_argument_parser() -> ArgumentParser:
     shared_args.add_argument('--verbose', '-v', default=False, action='store_true', help='Verbose output.')
     shared_args.add_argument('--debug', default=False, action='store_true', help='Debug output.')
     shared_args.add_argument(
-        '--definition-dir',
+        '--definition',
         dest='definition_dir',
         nargs='?',
         type=dir_path,
