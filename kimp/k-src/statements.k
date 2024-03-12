@@ -24,18 +24,18 @@ module STATEMENTS-RULES
 
   rule if ( C ) E => if ( C ) E else {}
 
-  rule
+  rule [while]:
     while ( C ) E
     => if ( C ) {
         E
         while ( C ) E
        }
 
-  rule { E } => E
+  rule [block]: { E } => E ~> {}
 
-  rule {} => .K
+  rule [done]: {} => .K
 
-  rule S1:Stmt S2:Stmt => S1 ~> S2
+  rule [step]: S1:Stmt S2:Stmt => S1 ~> S2
 
 endmodule
 
