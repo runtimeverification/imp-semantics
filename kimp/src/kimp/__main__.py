@@ -223,31 +223,6 @@ def create_argument_parser() -> ArgumentParser:
 
     parser = ArgumentParser(prog='kimp', description='KIMP command line tool')
     command_parser = parser.add_subparsers(dest='command', required=True, help='Command to execute')
-    # Parse
-    parse_subparser = command_parser.add_parser('parse', help='Parse a .imp file', parents=[shared_args])
-    parse_subparser.add_argument(
-        'input_file',
-        type=file_path,
-        help='Path to .imp file',
-    )
-    parse_subparser.add_argument(
-        '--input',
-        dest='input',
-        type=str,
-        default='program',
-        help='Input mode',
-        choices=['program', 'binary', 'json', 'kast', 'kore'],
-        required=False,
-    )
-    parse_subparser.add_argument(
-        '--output',
-        dest='output',
-        type=str,
-        default='kore',
-        help='Output mode',
-        choices=['pretty', 'program', 'json', 'kore', 'kast', 'none'],
-        required=False,
-    )
 
     # Run
     run_subparser = command_parser.add_parser('run', help='Run an IMP program', parents=[shared_args])
@@ -277,78 +252,14 @@ def create_argument_parser() -> ArgumentParser:
         'prove', help='Prove a K claim', parents=[shared_args, spec_file_shared_args, claim_shared_args, explore_args]
     )
 
-    # Summarize
-    _ = command_parser.add_parser(
-        'summarize',
-        help='Prove a K claim',
-        parents=[shared_args, spec_file_shared_args, claim_shared_args, explore_args],
-    )
-
-    # BMC Prove
-    bmc_prove_subparser = command_parser.add_parser(
-        'bmc-prove',
-        help='Prove a K claim with the Bounded Model-Checker',
-        parents=[shared_args, spec_file_shared_args, claim_shared_args, explore_args],
-    )
-    bmc_prove_subparser.add_argument(
-        '--bmc-depth',
-        type=int,
-        default=1,
-        help='Model checking bound',
-    )
-
-    # Refute node
-    refute_node_subparser = command_parser.add_parser(
-        'refute-node', help='Refute a node as infeasible', parents=[shared_args, claim_shared_args]
-    )
-    refute_node_subparser.add_argument(
-        '--node',
-        dest='node',
-        type=str,
-        help='node short hash',
-    )
-
-    # show refutation
-    show_refutation_subparser = command_parser.add_parser(
-        'show-refutation',
-        help='Display the equality proof of a node refutation',
-        parents=[shared_args, claim_shared_args],
-    )
-    show_refutation_subparser.add_argument(
-        '--node',
-        dest='node',
-        type=str,
-        help='node short hash',
-    )
-
-    # EQ prove
-    eq_prove_subparser = command_parser.add_parser('eq-prove', help='Prove an equality', parents=[shared_args])
-    eq_prove_subparser.add_argument(
-        'proof_id',
-        type=str,
-        help='Id of a JSON-serialized proof',
-    )
-
     # KCFG show
-    kcfg_show_subparser = command_parser.add_parser(
-        'show', help="Display the proof's symbolic execution tree as text", parents=[shared_args, claim_shared_args]
-    )
-    kcfg_show_subparser.add_argument(
-        '--to-module',
-        default=False,
-        action='store_true',
-        help='Display a K module containing the KCFG thus far.',
-    )
-    kcfg_show_subparser.add_argument(
-        '--inline-nodes',
-        default=False,
-        action='store_true',
-        help='Display states inline with KCFG nodes.',
+    command_parser.add_parser(
+        'show', help="Display a proof's symbolic execution tree as text", parents=[shared_args, claim_shared_args]
     )
     # KCFG view
     command_parser.add_parser(
         'view',
-        help="Display the proof's symbolic execution tree in an intercative viewver",
+        help="Display a proof's symbolic execution tree in an intercative viewver",
         parents=[shared_args, claim_shared_args],
     )
 
