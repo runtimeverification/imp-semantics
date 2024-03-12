@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import logging
+import os
 import subprocess
 from argparse import ArgumentParser
 from pathlib import Path
-import os
 from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Final
 
@@ -22,11 +22,11 @@ _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
 
 
 def find_definiton_dir(target: str) -> Path:
-    '''
+    """
     Find the kompiled definiton directory for a `kbuild` target target:
     * if the KIMP_${target.upper}_DIR is set --- use that
     * otherwise ask `kbuild`
-    '''
+    """
 
     def kbuild_definition_dir(target: str) -> Path:
         proc_result = subprocess.run(
@@ -51,14 +51,14 @@ def find_definiton_dir(target: str) -> Path:
 
 
 def find_k_src_dir() -> Path:
-    '''
+    """
     A heuristic way to find the the k-src dir with the K sources is located:
     * if KIMP_K_SRC environment variable is set --- use that
     * otherwise, use ./k-src and hope it works
-    '''
-    ksrc_dir = os.environ.get(f'KIMP_K_SRC')
-    if ksrc_dir:
-        ksrc_dir = Path(ksrc_dir).resolve()
+    """
+    ksrc_dir_str = os.environ.get('KIMP_K_SRC')
+    if ksrc_dir_str is not None:
+        ksrc_dir = Path(ksrc_dir_str).resolve()
     else:
         ksrc_dir = Path('./k-src')
     return ksrc_dir
@@ -134,7 +134,7 @@ def exec_prove(
         definition_dir = str(find_definiton_dir('haskell'))
     k_src_dir = str(find_k_src_dir())
 
-    kimp = KIMP(definition_dir, definition_dir)
+    kimp = KIMP(definition_dir, definition_dir, None)
 
     try:
         kimp.prove(
@@ -167,7 +167,7 @@ def exec_show(
     **kwargs: Any,
 ) -> None:
     definition_dir = str(find_definiton_dir('haskell'))
-    kimp = KIMP(definition_dir, definition_dir)
+    kimp = KIMP(definition_dir, definition_dir, None)
     kimp.show_kcfg(spec_module, claim_id)
 
 
@@ -178,7 +178,7 @@ def exec_view(
     **kwargs: Any,
 ) -> None:
     definition_dir = str(find_definiton_dir('haskell'))
-    kimp = KIMP(definition_dir, definition_dir)
+    kimp = KIMP(definition_dir, definition_dir, None)
     kimp.view_kcfg(spec_module, claim_id)
 
 
