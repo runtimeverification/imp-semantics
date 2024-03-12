@@ -143,7 +143,7 @@ def exec_prove(
             raise
 
 
-def exec_show_kcfg(
+def exec_show(
     definition_dir: str,
     spec_module: str,
     claim_id: str,
@@ -154,7 +154,7 @@ def exec_show_kcfg(
     kimp.show_kcfg(spec_module, claim_id)
 
 
-def exec_view_kcfg(
+def exec_view(
     definition_dir: str,
     spec_module: str,
     claim_id: str,
@@ -331,7 +331,7 @@ def create_argument_parser() -> ArgumentParser:
 
     # KCFG show
     kcfg_show_subparser = command_parser.add_parser(
-        'show-kcfg', help='Display tree show of CFG', parents=[shared_args, claim_shared_args]
+        'show', help="Display the proof's symbolic execution tree as text", parents=[shared_args, claim_shared_args]
     )
     kcfg_show_subparser.add_argument(
         '--to-module',
@@ -345,15 +345,12 @@ def create_argument_parser() -> ArgumentParser:
         action='store_true',
         help='Display states inline with KCFG nodes.',
     )
-    # KCFG to dot
+    # KCFG view
     command_parser.add_parser(
-        'kcfg-to-dot',
-        help='Dump the given CFG for the proof as DOT for visualization.',
+        'view',
+        help="Display the proof's symbolic execution tree in an intercative viewver",
         parents=[shared_args, claim_shared_args],
     )
-
-    # KCFG view
-    command_parser.add_parser('view-kcfg', help='Display tree view of CFG', parents=[shared_args, claim_shared_args])
 
     return parser
 
