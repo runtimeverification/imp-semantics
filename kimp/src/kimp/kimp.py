@@ -135,6 +135,7 @@ class KIMP:
         output: KRunOutput = KRunOutput.NONE,
         check: bool = True,
         temp_file: Optional[Union[str, Path]] = None,
+        depth: int | None,
     ) -> CompletedProcess:
         def run(program_file: Path) -> CompletedProcess:
             return _krun(
@@ -142,6 +143,7 @@ class KIMP:
                 definition_dir=self.llvm_dir,
                 output=output,
                 check=check,
+                depth=depth,
                 pipe_stderr=True,
                 pmap={'PGM': str(self.imp_parser)} if hasattr(self, 'imp_parser') else {},
             )
