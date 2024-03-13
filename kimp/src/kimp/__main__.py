@@ -83,6 +83,7 @@ def exec_run(
     input_term: str | None = None,
     output: str = 'none',
     ignore_return_code: bool = False,
+    depth: int | None = None,
     **kwargs: Any,
 ) -> None:
     krun_output = KRunOutput[output.upper()]
@@ -106,7 +107,7 @@ def exec_run(
                 temp_file.write_text(input_term)
             else:
                 temp_file.write_text(Path(input_file).read_text())
-            proc_res = kimp.run_program(temp_file, output=krun_output)
+            proc_res = kimp.run_program(temp_file, output=krun_output, depth=depth)
             if output != KAstOutput.NONE:
                 print(proc_res.stdout)
     except RuntimeError as err:
@@ -269,6 +270,12 @@ def create_argument_parser() -> ArgumentParser:
         action='store_true',
         default=False,
         help='Ignore return code of krun, alwasys return 0 (use for debugging only)',
+    )
+    run_subparser.add_argument(
+        '--depth',
+        dest='depth',
+        type=int,
+        help='Execute at most DEPTH rewrite steps',
     )
 
     # Prove
