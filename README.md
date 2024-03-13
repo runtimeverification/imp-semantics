@@ -18,6 +18,7 @@ First off, clone the project and step into its directory:
 git clone https://github.com/runtimeverification/imp-semantics
 git checkout bob2024
 cd imp-semantics
+git checkout bob2024
 ```
 
 Use the following to start a container with an interactive shell:
@@ -82,6 +83,16 @@ Within that virtual environment, you can use `kimp` directly.
 * proving *claims* about IMP programs by executing them with K's symbolic execution backend
 
 Run `kimp --help` to see the available commands and their arguments. Let us now give examples for both concrete executing and proving:
+
+### Preparation
+
+The K files need to be compiled before anything can be executed.
+The `Makefile` defines a `build` target that will executed the `kompile` commands for this.
+
+```
+make build
+```
+If the `*.k` files in `kimp/k-src` change, this step needs to be repeated.
 
 ### Concrete execution
 

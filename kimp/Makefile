@@ -13,7 +13,7 @@ build: kbuild-imp
 
 .PHONY: poetry-install
 poetry-install:
-	$(POETRY) install
+	$(POETRY) install --without dev
 
 .PHONY: kbuild-imp
 kbuild-imp: poetry-install
