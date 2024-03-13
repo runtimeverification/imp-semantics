@@ -10,8 +10,6 @@ module IMP-VERIFICATION-SYNTAX
                 | "$n" [token]
                 | "$m" [token]
                 | "$k" [token]
-
-    syntax Bool ::= isUInt64(Int) [macro]
 endmodule
 
 
@@ -24,8 +22,5 @@ module IMP-VERIFICATION
     rule          A >=Int B  => B <=Int A [simplification]
     rule notBool (A  <Int B) => B <=Int A [simplification]
     rule notBool (A <=Int B) => B  <Int A [simplification]
-
-    // range predicates
-    rule isUInt64(I) => I >=Int 0 andBool I <=Int 18446744073709551615
 
 endmodule
