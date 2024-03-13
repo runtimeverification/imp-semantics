@@ -7,10 +7,8 @@ default: help
 help:
 	@echo "Please read the Makefile."
 
-.phony: docker
-docker: docker/.image
-
-docker/.image: docker/Dockerfile.k+pyk
+.PHONY: docker
+docker: docker/Dockerfile.k+pyk
 	docker build \
 		--build-arg K_VERSION=$(K_VERSION) \
 		--build-arg PYK_VERSION=$(PYK_VERSION) \
@@ -32,7 +30,7 @@ build-kimp: have-k
 .build/%-kompiled-haskell: kimp/k-src/%.k $(K_SOURCES)
 	$(KOMPILE) --output-definition $@ $< -I kimp/k-src --backend haskell
 
-.phony: have-k
+.PHONY: have-k
 have-k: FOUND_VERSION = $(shell $(KOMPILE) --version \
 				  | sed -n -e 's/^K version: *v\?\([0-9.]*\)$$/\1/p')
 have-k:
