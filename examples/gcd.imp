@@ -2,7 +2,7 @@ fun mod(a, b) = {
   if (b == 0)
     return 0;
   else
-    return a - (a / b) * b ;
+    return - (a / b) * b + a;
 }
 
 fun gcd_(a, b) = {

@@ -2,7 +2,7 @@ fun sumToZero(N) = {
     if (N <= 0)
       return 0;
     else
-      return N + sumToZero(N - 1);
+      return N + sumToZero(- 1 + N);
 }
 
 return sumToZero(10);
