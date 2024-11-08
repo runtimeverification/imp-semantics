@@ -10,12 +10,15 @@ authors = [
     "Runtime Verification, Inc. <contact@runtimeverification.com>",
 ]
 
+[tool.poetry.scripts]
+kimp = "kimp.__main__:main"
+
+[tool.poetry.plugins.kdist]
+imp-semantics = "kimp.kdist.plugin"
+
 [tool.poetry.dependencies]
 python = "^3.10"
 kframework = "v7.1.170"
-
-[tool.poetry.scripts]
-kimp = "kimp.__main__:main"
 
 [tool.poetry.group.dev.dependencies]
 autoflake = "*"

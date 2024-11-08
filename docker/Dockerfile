@@ -23,15 +23,14 @@ ENV K_VERSION=${K_VERSION} \
     force_color_prompt=yes
 
 # install poetry
-RUN pip install poetry
+RUN curl -sSL https://install.python-poetry.org | python3 -
 
 # install kimp and set env vars for it
 COPY --chown=k-user:k-group ./kimp /home/k-user/kimp-src
-RUN make -C /home/k-user/kimp-src install && \
-    rm -r /home/k-user/kimp-src
-ENV KIMP_LLVM_DIR=/home/k-user/workspace/kimp/kdist/v${K_VERSION}/llvm       \
-    KIMP_HASKELL_DIR=/home/k-user/workspace/kimp/kdist/v${K_VERSION}/haskell \
-    KIMP_K_SRC=/home/k-user/workspace/kimp/k-src
+RUN poetry -C /home/k-user/kimp-src build && \
+    pip install /home/k-user/kimp-src/dist/*.whl && \
+    rm -r /home/k-user/kimp-src && \
+    kdist --verbose build -j2
 WORKDIR /home/k-user/workspace
 
 ENTRYPOINT ["fixuid", "-q"]

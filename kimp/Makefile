@@ -1,26 +1,25 @@
 POETRY     := poetry
 POETRY_RUN := $(POETRY) run
 
-default: build
-
-.PHONY: clean
-clean:
-	rm -rf dist .mypy_cache .pytest_cache
-	find -type d -name __pycache__ -prune -exec rm -rf {} \;
-
-.PHONY: build
-build: kbuild-imp
+default: check build
 
 .PHONY: poetry-install
 poetry-install:
-	$(POETRY) install --without dev
+	$(POETRY) install
 
-.PHONY: kbuild-imp
-kbuild-imp: poetry-install
-	$(POETRY) run kbuild kompile llvm
-	$(POETRY) run kbuild kompile haskell
+.PHONY: clean
+clean: poetry-install
+	rm -rf dist .mypy_cache .pytest_cache
+	find -type d -name __pycache__ -prune -exec rm -rf {} \;
 
-.PHONY: install
+build: kdist-build
+
+kdist-build: poetry-install
+	$(POETRY_RUN) kdist --verbose build -j2
+
+kdist-clean: poetry-install
+	$(POETRY_RUN) kdist clean
+
 install: poetry-install
 	$(POETRY) build
 	pip install dist/*.whl

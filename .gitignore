@@ -7,5 +7,4 @@ kimp/.kprove*
 *~
 docker/.image
 dist
-kdist
 *venv
