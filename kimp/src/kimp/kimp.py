@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from typing import TYPE_CHECKING, Iterable, Iterator, Optional, Union, final
+from typing import TYPE_CHECKING, final
 
 from pyk.cli.utils import check_dir_path, check_file_path
 from pyk.cterm.symbolic import CTermSymbolic
@@ -28,6 +28,7 @@ from pyk.proof.tui import APRProofViewer
 from pyk.utils import single
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
     from subprocess import CompletedProcess
     from typing import Final
 
@@ -90,7 +91,7 @@ class KIMP:
     imp_parser: Path
     proof_dir: Path
 
-    def __init__(self, llvm_dir: Union[str, Path], haskell_dir: Union[str, Path], imp_parser: Path | None):
+    def __init__(self, llvm_dir: str | Path, haskell_dir: str | Path, imp_parser: Path | None):
         llvm_dir = Path(llvm_dir)
         check_dir_path(llvm_dir)
 
@@ -120,11 +121,11 @@ class KIMP:
 
     def run_program(
         self,
-        program_file: Union[str, Path],
+        program_file: str | Path,
         *,
         output: KRunOutput = KRunOutput.NONE,
         check: bool = True,
-        temp_file: Optional[Union[str, Path]] = None,
+        temp_file: str | Path | None = None,
         depth: int | None,
     ) -> CompletedProcess:
         def run(program_file: Path) -> CompletedProcess:
