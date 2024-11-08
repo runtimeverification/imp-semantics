@@ -32,7 +32,6 @@ if TYPE_CHECKING:
     from typing import Final
 
     from pyk.cterm.cterm import CTerm
-    from pyk.kast.outer import KDefinition
     from pyk.kast.pretty import SymbolTable
     from pyk.kcfg.kcfg import KCFG, KCFGExtendResult
     from pyk.kore.rpc import FallbackReason
@@ -44,12 +43,6 @@ _LOGGER: Final = logging.getLogger(__name__)
 
 
 class ImpSemantics(KCFGSemantics):
-    definition: KDefinition | None
-
-    def __init__(self, definition: KDefinition | None = None):
-        super().__init__()
-        self.definition = definition
-
     def is_terminal(self, c: CTerm) -> bool:
         k_cell = c.cell('K_CELL')
         if type(k_cell) is KSequence:
@@ -187,7 +180,7 @@ class KIMP:
 
         with legacy_explore(
             self.kprove,
-            kcfg_semantics=ImpSemantics(self.kprove.definition),
+            kcfg_semantics=ImpSemantics(),
             id=spec_label,
         ) as kcfg_explore:
             prover = APRProver(
