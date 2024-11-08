@@ -279,7 +279,7 @@ def create_argument_parser() -> ArgumentParser:
     )
 
     # Prove
-    _ = command_parser.add_parser(
+    command_parser.add_parser(
         'prove', help='Prove a K claim', parents=[shared_args, spec_file_shared_args, claim_shared_args, explore_args]
     )
 
@@ -287,6 +287,7 @@ def create_argument_parser() -> ArgumentParser:
     command_parser.add_parser(
         'show', help="Display a proof's symbolic execution tree as text", parents=[shared_args, claim_shared_args]
     )
+
     # KCFG view
     command_parser.add_parser(
         'view',
