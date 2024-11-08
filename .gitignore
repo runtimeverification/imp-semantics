@@ -1,6 +1,5 @@
 .build
 module-imports-graph.svg
-tests/specs/verification-kompiled/*
 .krun*
 kimp/.kprove*
 .kimp
