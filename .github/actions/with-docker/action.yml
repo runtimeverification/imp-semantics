@@ -1,0 +1,46 @@
+name: 'With Docker'
+description: 'Start a Docker container with the K development environment set up'
+inputs:
+  container-name:
+    description: 'Docker container name to use'
+    required: true
+    type: string
+runs:
+  using: 'composite'
+  steps:
+  - name: 'Set up Docker'
+    shell: bash {0}
+    run: |
+      set -euxo pipefail
+
+      CONTAINER_NAME=${{ inputs.container-name }}
+      TAG=runtimeverificationinc/${CONTAINER_NAME}
+      DOCKERFILE=${{ github.action_path }}/Dockerfile
+      K_VERSION=$(cat deps/k_release)
+
+      docker build .                       \
+        --file ${DOCKERFILE}               \
+        --build-arg K_VERSION=${K_VERSION} \
+        --tag ${TAG}
+
+  - name: 'Run Docker container'
+    shell: bash {0}
+    run: |
+      set -euxo pipefail
+
+      CONTAINER_NAME=${{ inputs.container-name }}
+      TAG=runtimeverificationinc/${CONTAINER_NAME}
+      WORKDIR=/home/user
+
+      docker run                 \
+        --name ${CONTAINER_NAME} \
+        --rm                     \
+        --interactive            \
+        --tty                    \
+        --detach                 \
+        --user root              \
+        --workdir ${WORKDIR}     \
+        ${TAG}
+
+      docker cp . ${CONTAINER_NAME}:${WORKDIR}
+      docker exec ${CONTAINER_NAME} chown -R user:user ${WORKDIR}
