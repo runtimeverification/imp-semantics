@@ -12,9 +12,9 @@ module EXPRESSIONS-SYNTAX
   imports VALUE-SYNTAX
 
   syntax Expr     ::= Value
-                    | "(" Expr ")" [bracket]
+                    | "(" Expr ")" [bracket, format(%1%2%3)]
 
-  syntax Expr     ::= "-" Expr      [group(unary), strict, non-assoc]
+  syntax Expr     ::= "-" Expr      [group(unary), strict, non-assoc, format(%1%2)]
                     > left:
                       Expr "*" Expr [group(mul), seqstrict]
                     | Expr "/" Expr [group(mul), seqstrict]
@@ -29,7 +29,7 @@ module EXPRESSIONS-SYNTAX
                     | Expr "<=" Expr [group(comp), seqstrict, non-assoc]
                     | Expr "<"  Expr [group(comp), strict, non-assoc]
 
-  syntax Expr     ::= "!" Expr       [group(unary), strict, non-assoc]
+  syntax Expr     ::= "!" Expr       [group(unary), strict, non-assoc, format(%1%2)]
                     > Expr "&&" Expr [group(bool), seqstrict, left]
                     > Expr "||" Expr [group(bool), seqstrict, left]
 
