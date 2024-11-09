@@ -279,7 +279,7 @@ def create_argument_parser() -> ArgumentParser:
     # KCFG view
     command_parser.add_parser(
         'view',
-        help="Display a proof's symbolic execution tree in an intercative viewver",
+        help="Display a proof's symbolic execution tree in an intercative viewer",
         parents=[shared_args, claim_shared_args],
     )
 
