@@ -7,11 +7,12 @@ help:
 	@echo "Please read the Makefile."
 
 .PHONY: docker
-docker: docker/Dockerfile
-	docker build \
+docker: TAG=runtimeverificationinc/imp-semantics:$(K_VERSION)
+docker: package/Dockerfile
+	docker build . \
 		--build-arg K_VERSION=$(K_VERSION) \
-		-f $< -t runtimeverificationinc/imp-semantics-k:$(K_VERSION) .
-	touch $@
+		--file $< \
+		--tag $(TAG)
 
 build: build-kimp
 
@@ -20,8 +21,6 @@ build-kimp: have-k
 
 .PHONY: have-k
 have-k: FOUND_VERSION=$(shell $(KOMPILE) --version | sed -n -e 's/^K version: *v\?\(.*\)$$/\1/p')
-
-.PHONY: have-k
 have-k:
 	@[ ! -z "$(KOMPILE)" ] || \
 		(echo "K compiler (kompile) not found (use variable KOMPILE to override)."; exit 1)
