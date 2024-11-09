@@ -2,14 +2,8 @@ requires "statements.k"
 
 module IMP-VERIFICATION-SYNTAX
     imports ID-SYNTAX
-    imports INT-SYNTAX
 
-    syntax Id ::= "$s" [token]
-                | "$s1" [token]
-                | "$s2" [token]
-                | "$n" [token]
-                | "$m" [token]
-                | "$k" [token]
+    syntax Id ::= r"\\$[a-zA-Z0-9\\_]+" [token]
 endmodule
 
 
@@ -22,5 +16,4 @@ module IMP-VERIFICATION
     rule          A >=Int B  => B <=Int A [simplification]
     rule notBool (A  <Int B) => B <=Int A [simplification]
     rule notBool (A <=Int B) => B  <Int A [simplification]
-
 endmodule
