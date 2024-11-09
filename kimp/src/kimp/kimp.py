@@ -280,7 +280,6 @@ def legacy_explore(
                     definition=kprint.definition,
                 )
                 yield KCFGExplore(
-                    # kore_client=client,
                     kcfg_semantics=kcfg_semantics,
                     id=id,
                     cterm_symbolic=cterm_symbolic,
