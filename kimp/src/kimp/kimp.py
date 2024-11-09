@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pyk.kast.pretty import paren
 from pyk.kcfg.show import NodePrinter
 
 __all__ = ['KIMP']
@@ -33,7 +32,6 @@ if TYPE_CHECKING:
     from typing import Final
 
     from pyk.cterm.cterm import CTerm
-    from pyk.kast.pretty import SymbolTable
     from pyk.kcfg.kcfg import KCFG, KCFGExtendResult
     from pyk.kore.rpc import FallbackReason
     from pyk.ktool.kprint import KPrint
@@ -110,10 +108,7 @@ class KIMP:
 
     @cached_property
     def kprove(self) -> KProve:
-        kprove = KProve(
-            definition_dir=self.haskell_dir, use_directory=self.proof_dir, patch_symbol_table=KIMP._patch_symbol_table
-        )
-        return kprove
+        return KProve(definition_dir=self.haskell_dir, use_directory=self.proof_dir)
 
     @cached_property
     def krun(self) -> KRun:
@@ -229,10 +224,6 @@ class KIMP:
             proof,
         )
         print('\n'.join(res_lines))
-
-    @classmethod
-    def _patch_symbol_table(cls, symbol_table: SymbolTable) -> None:
-        symbol_table['_Map_'] = paren(lambda m1, m2: m1 + '\n' + m2)
 
 
 @contextmanager
