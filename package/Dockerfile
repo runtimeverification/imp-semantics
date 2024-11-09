@@ -31,10 +31,12 @@ RUN poetry -C /home/k-user/kimp-src build && \
     pip install /home/k-user/kimp-src/dist/*.whl && \
     rm -r /home/k-user/kimp-src && \
     kdist --verbose build -j2
+
 WORKDIR /home/k-user/workspace
+COPY --chown=k-user:k-group examples examples
+COPY --chown=k-user:k-group  ./package/smoke-test.sh .
 
 ENTRYPOINT ["fixuid", "-q"]
-
 
 CMD ["printf", "%s\n",\
      "Welcome to the K Framework!",\
