@@ -88,10 +88,9 @@ class ImpSemantics(KCFGSemantics):
 class KIMP:
     llvm_dir: Path
     haskell_dir: Path
-    imp_parser: Path
     proof_dir: Path
 
-    def __init__(self, llvm_dir: str | Path, haskell_dir: str | Path, imp_parser: Path | None):
+    def __init__(self, llvm_dir: str | Path, haskell_dir: str | Path):
         llvm_dir = Path(llvm_dir)
         check_dir_path(llvm_dir)
 
@@ -103,9 +102,11 @@ class KIMP:
 
         object.__setattr__(self, 'llvm_dir', llvm_dir)
         object.__setattr__(self, 'haskell_dir', haskell_dir)
-        if imp_parser is not None:
-            object.__setattr__(self, 'imp_parser', imp_parser)
         object.__setattr__(self, 'proof_dir', proof_dir)
+
+    @cached_property
+    def imp_parser(self) -> Path:
+        return self.llvm_dir / 'parser_PGM'
 
     @cached_property
     def kprove(self) -> KProve:
@@ -136,7 +137,7 @@ class KIMP:
                 check=check,
                 depth=depth,
                 pipe_stderr=True,
-                pmap={'PGM': str(self.imp_parser)} if hasattr(self, 'imp_parser') else {},
+                pmap={'PGM': str(self.imp_parser)},
             )
 
         def preprocess_and_run(program_file: Path, temp_file: Path) -> CompletedProcess:
