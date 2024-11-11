@@ -1,5 +1,4 @@
 K_VERSION   ?= $(shell cat deps/k_release)
-PYK_VERSION ?= $(shell cat deps/pyk_release)
 KOMPILE     ?= $(shell which kompile)
 
 default: help
@@ -8,10 +7,9 @@ help:
 	@echo "Please read the Makefile."
 
 .PHONY: docker
-docker: docker/Dockerfile.k+pyk
+docker: docker/Dockerfile
 	docker build \
 		--build-arg K_VERSION=$(K_VERSION) \
-		--build-arg PYK_VERSION=$(PYK_VERSION) \
 		-f $< -t runtimeverificationinc/imp-semantics-k:$(K_VERSION) .
 	touch $@
 

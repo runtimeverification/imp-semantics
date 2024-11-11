@@ -3,7 +3,6 @@ ARG K_VERSION
 FROM runtimeverificationinc/kframework-k:ubuntu-jammy-$K_VERSION
 
 ARG K_VERSION
-ARG PYK_VERSION
 
 # create non-root user and adjust UID:GID on start-up
 # see https://github.com/boxboat/fixuid
@@ -20,16 +19,11 @@ RUN apt-get install -y curl graphviz python-is-python3 && \
 USER k-user:k-group
 WORKDIR /home/k-user
 ENV K_VERSION=${K_VERSION} \
-    PYK_VERSION=${PYK_VERSION} \
     PATH=/home/k-user/.local/bin:$PATH \
     force_color_prompt=yes
 
-# install poetry and pyk (ours! not the one in pip)
-RUN pip install poetry && \
-    curl -SsL https://github.com/runtimeverification/pyk/archive/refs/tags/v${PYK_VERSION}.tar.gz | tar -C /home/k-user -xzf - && \
-    cd pyk-${PYK_VERSION} && \
-    make build && \
-    pip install dist/*.whl
+# install poetry
+RUN pip install poetry
 
 # install kimp and set env vars for it
 COPY --chown=k-user:k-group ./kimp /home/k-user/kimp-src
@@ -43,20 +37,20 @@ WORKDIR /home/k-user/workspace
 ENTRYPOINT ["fixuid", "-q"]
 
 
-CMD printf "%s\n" \
-    "Welcome to the K framework" \
-    "" \
-    "This docker image provides a K-framework installation with the following programs:" \
-    " * kompile" \
-    " * krun" \
-    " * kprove" \
-    " * kast" \
-    " * K backend tools (kore-*)" \
-    "" \
-    "as well as a pre-installed pyk library to interact with K programmatically." \
-    "" \
-    "To use this docker image, start a container with an interactive shell and" \
-    "a working directory with your K definition mounted into it, like so:" \
-    "" \
-    'user@host$ docker run --rm -it -v "$PWD":/home/k-user/workspace -u $(id -u):$(id -g) <docker-image> /bin/bash' \
-    ""
+CMD ["printf", "%s\n",\
+     "Welcome to the K Framework!",\
+     "",\
+     "This docker image provides a K-framework installation with the following programs:",\
+     " * kompile",\
+     " * krun",\
+     " * kprove",\
+     " * kast",\
+     " * K backend tools (kore-*)",\
+     "",\
+     "as well as a pre-installed pyk library to interact with K programmatically.",\
+     "",\
+     "To use this docker image, start a container with an interactive shell and",\
+     "a working directory with your K definition mounted into it, like so:",\
+     "",\
+     "user@host$ docker run --rm -it -v \"$PWD\":/home/k-user/workspace -u $(id -u):$(id -g) <docker-image> /bin/bash",\
+     ""]

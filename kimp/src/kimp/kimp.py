@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pyk.kast.manip import get_cell, remove_generated_cells
 from pyk.kast.pretty import paren
 from pyk.kcfg.show import NodePrinter
 
@@ -16,16 +15,13 @@ from typing import TYPE_CHECKING, Iterable, Iterator, Optional, Union, final
 
 from pyk.cli.utils import check_dir_path, check_file_path
 from pyk.cterm.symbolic import CTermSymbolic
-from pyk.kast.inner import KApply, KSequence, KVariable
+from pyk.kast.inner import KApply, KLabel, KSequence, KVariable
 from pyk.kast.manip import ml_pred_to_bool
 from pyk.kcfg.explore import KCFGExplore
 from pyk.kcfg.semantics import KCFGSemantics
-from pyk.kore.kompiled import KompiledKore
 from pyk.kore.rpc import KoreClient, kore_server
 from pyk.ktool.kprove import KProve
 from pyk.ktool.krun import KRun, KRunOutput, _krun
-from pyk.prelude.kbool import BOOL, notBool
-from pyk.prelude.ml import mlEqualsTrue
 from pyk.proof.reachability import APRProof, APRProver
 from pyk.proof.show import APRProofShow
 from pyk.proof.tui import APRProofViewer
@@ -36,10 +32,9 @@ if TYPE_CHECKING:
     from typing import Final
 
     from pyk.cterm.cterm import CTerm
-    from pyk.kast.inner import KInner
     from pyk.kast.outer import KDefinition
     from pyk.kast.pretty import SymbolTable
-    from pyk.kcfg.kcfg import KCFG
+    from pyk.kcfg.kcfg import KCFG, KCFGExtendResult
     from pyk.kore.rpc import FallbackReason
     from pyk.ktool.kprint import KPrint
     from pyk.utils import BugReport
@@ -66,29 +61,31 @@ class ImpSemantics(KCFGSemantics):
             return True
         return False
 
-    def extract_branches(self, c: CTerm) -> list[KInner]:
-        if self.definition is None:
-            raise ValueError('IMP branch extraction requires a non-None definition')
-
-        k_cell = c.cell('K_CELL')
-        if type(k_cell) is KSequence and len(k_cell) > 0:
-            k_cell = k_cell[0]
-        if type(k_cell) is KApply and k_cell.label.name == 'if(_)_else_':
-            condition = k_cell.args[0]
-            if (type(condition) is KVariable and condition.sort == BOOL) or (
-                type(condition) is KApply and self.definition.return_sort(condition.label) == BOOL
-            ):
-                return [mlEqualsTrue(condition), mlEqualsTrue(notBool(condition))]
-        return []
-
     def abstract_node(self, c: CTerm) -> CTerm:
         return c
+
+    def is_loop(self, c: CTerm) -> bool:
+        k_cell = c.cell('K_CELL')
+        match k_cell:
+            case KSequence((KApply(KLabel('while(_)_')), *_)):
+                return True
+            case _:
+                return False
 
     def same_loop(self, c1: CTerm, c2: CTerm) -> bool:
         k_cell_1 = c1.cell('K_CELL')
         k_cell_2 = c2.cell('K_CELL')
         if k_cell_1 == k_cell_2 and type(k_cell_1) is KSequence and type(k_cell_1[0]) is KApply:
             return k_cell_1[0].label.name == 'while(_)_'  # type: ignore
+        return False
+
+    def can_make_custom_step(self, c: CTerm) -> bool:
+        return False
+
+    def custom_step(self, c: CTerm) -> KCFGExtendResult | None:
+        return None
+
+    def is_mergeable(self, c1: CTerm, c2: CTerm) -> bool:
         return False
 
 
@@ -194,23 +191,22 @@ class KIMP:
             id=spec_label,
         ) as kcfg_explore:
             prover = APRProver(
-                proof,
                 kcfg_explore=kcfg_explore,
                 execute_depth=max_depth,
                 cut_point_rules=['STATEMENTS-RULES.while'],
                 terminal_rules=['STATEMENTS-RULES.done'],
             )
-            prover.advance_proof(max_iterations=max_iterations)
+            prover.advance_proof(proof, max_iterations=max_iterations)
 
             print(proof.summary)
             print('============================================')
             print("What's next?: ")
             print('============================================')
             print('To inspect the symbolic execution trace interactively, run: ')
-            print(f'  kimp view-kcfg {spec_module} {claim_id}')
+            print(f'  kimp view {spec_module} {claim_id}')
             print('============================================')
             print('To dump the symbolic execution trace into stdout, run: ')
-            print(f'  kimp show-kcfg {spec_module} {claim_id}')
+            print(f'  kimp show {spec_module} {claim_id}')
             print('============================================')
             if not proof.passed:
                 print('To retry the failed/pending proof, run : ')
@@ -279,11 +275,15 @@ def legacy_explore(
             interim_simplification=interim_simplification,
             no_post_exec_simplify=no_post_exec_simplify,
         ) as server:
-            with KoreClient('localhost', server.port, bug_report=bug_report, bug_report_id=id) as client:
+            with KoreClient(
+                'localhost',
+                server.port,
+                bug_report=bug_report,
+                bug_report_id=id if bug_report else None,
+            ) as client:
                 cterm_symbolic = cterm_symbolic = CTermSymbolic(
                     kore_client=client,
                     definition=kprint.definition,
-                    kompiled_kore=KompiledKore.load(kprint.definition_dir),
                 )
                 yield KCFGExplore(
                     # kore_client=client,
@@ -298,7 +298,6 @@ def legacy_explore(
             cterm_symbolic = cterm_symbolic = CTermSymbolic(
                 kore_client=client,
                 definition=kprint.definition,
-                kompiled_kore=KompiledKore.load(kprint.definition_dir),
             )
             yield KCFGExplore(
                 kcfg_semantics=kcfg_semantics,
@@ -316,13 +315,13 @@ class KIMPNodePrinter(NodePrinter):
 
     def print_node(self, kcfg: KCFG, node: KCFG.Node) -> list[str]:
         ret_strs = super().print_node(kcfg, node)
-        config = get_cell(remove_generated_cells(node.cterm.config), 'K_CELL')
-        env = get_cell(remove_generated_cells(node.cterm.config), 'ENV_CELL')
+        k_cell = node.cterm.cell('K_CELL')
+        env_cell = node.cterm.cell('ENV_CELL')
         # pretty-print the configuration
-        ret_strs += self.kimp.kprove.pretty_print(config).splitlines()
+        ret_strs += self.kimp.kprove.pretty_print(k_cell).splitlines()
         ret_strs += ['env:']
         ret_strs += [
-            '  ' + l.replace('( ', '').replace(' )', '') for l in self.kimp.kprove.pretty_print(env).splitlines()
+            '  ' + l.replace('( ', '').replace(' )', '') for l in self.kimp.kprove.pretty_print(env_cell).splitlines()
         ]
         # pretty-print the constraints
         constraints = [ml_pred_to_bool(c) for c in node.cterm.constraints]
