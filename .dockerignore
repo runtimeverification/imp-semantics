@@ -2,7 +2,6 @@
 **/.kprove*
 **/.kimp
 **/dist
-**/kdist
 **/.mypy_cache
 **/.pytest_cache
 **/.venv*

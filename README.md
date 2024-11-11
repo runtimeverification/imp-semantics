@@ -8,9 +8,10 @@ KIMP consists of two major components:
 * The K definition of IMP;
 * The `kimp` command-line tool and Python package, that acts as a frontend to the K definition.
 
+
 ## Trying it out in `docker` (EASY)
 
-We have prepared a docker image that allows both using `kimp` as-is and hacking on it.
+We have prepared a Docker image that allows both using `kimp` as-is and hacking on it.
 
 First off, clone the project and step into its directory:
 
@@ -30,29 +31,24 @@ This command will download the docker image and mount the current working direct
 
 If everything is up and running, feel free to jump straight to the **Usage** section below. If you don't want to use `docker`, read the next section to build `kimp` manually.
 
+
 ## Installation instructions (ADVANCED)
 
 ### Prerequisites
 
 Make sure the K Framework is installed and is available on `PATH`. To install K, follow the official [Quick Start](https://github.com/runtimeverification/k#quick-start) instructions.
 
-To build the `kimp` Ptyhon CLI and library, we recommend using the `poetry` Python build tool. Install `poetry` following the instruction [here](https://python-poetry.org/docs/#installation).
+To build the `kimp` Python CLI and library, we recommend using the `poetry` Python build tool. Install `poetry` following the instruction [here](https://python-poetry.org/docs/#installation).
+
 
 ### Building
 
 To build the whole codebase, inclusing the `kimp` CLI and the K definition with both backends, LLVM (for concrete execution) and Haskell (for symbolic execution), execute:
+
 ```
 make build
 ```
 
-The `kimp` executable is a relatively thin wrapper for a number of generic K tools. These tools need access to the output of the K compiler that were produced at the previous step. The most robust way to point `kimp` to the K compiler output is by setting the following three environment variables:
-
-```
-export K_VERSION=$(cat deps/k_release)
-export KIMP_LLVM_DIR=$(realpath ./kimp/kdist/v${K_VERSION}/llvm)
-export KIMP_HASKELL_DIR=$(realpath ./kimp/kdist/v${K_VERSION}/haskell)
-export KIMP_K_SRC=$(realpath ./kimp/k-src)
-```
 
 ### Installing
 
@@ -69,7 +65,7 @@ Alternatively, you can install `kimp` with `pip` into a virtual environment:
 ```
 python -m venv venv
 source venv/bin/activate
-make -C kimp install # this calls pip for you
+pip install kimp
 ```
 
 Within that virtual environment, you can use `kimp` directly.
@@ -83,6 +79,7 @@ Within that virtual environment, you can use `kimp` directly.
 
 Run `kimp --help` to see the available commands and their arguments. Let us now give examples for both concrete executing and proving:
 
+
 ### Preparation
 
 The K files need to be compiled before anything can be executed.
@@ -91,7 +88,9 @@ The `Makefile` defines a `build` target that will executed the `kompile` command
 ```
 make build
 ```
-If the `*.k` files in `kimp/k-src` change, this step needs to be repeated.
+
+If the `*.k` files in `kimp/src/kimp/kdist/imp-semantics` change, this step needs to be repeated.
+
 
 ### Concrete execution
 
@@ -116,6 +115,7 @@ this program adds up the natural numbers up to 10 and should give the following 
 </generatedTop>
 ```
 
+
 ### Symbolic execution
 
 The K Framework is equipped with a symbolic execution backend that can be used to prove properties of programs. The properties to prove are formulated as K claims, and are essentially statements that one state always rewrites to another state if certain conditions hold. An example K claim that formulates an inductive invariant about the summation program we've executed before can be found in `examples/specs/imp-sum-spec.k`. Let us ask the prover to check this claim:
@@ -127,16 +127,11 @@ kimp prove examples/specs/imp-sum-spec.k IMP-SUM-SPEC sum-spec
 That command would run for some time and output the symbolic execution trace to a file upon completion. We can pretty-print the trace:
 
 ```
-kimp show-kcfg IMP-SUM-SPEC sum-spec
+kimp show IMP-SUM-SPEC sum-spec
 ```
 
 or even explore it interactively in a terminal user interface
 
 ```
-kimp view-kcfg IMP-SUM-SPEC sum-spec
+kimp view IMP-SUM-SPEC sum-spec
 ```
-
-
-
-
-

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import os
-import subprocess
 from argparse import ArgumentParser
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -21,33 +20,22 @@ _LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
 
 
-def find_definiton_dir(target: str) -> Path:
+def find_target(target: str) -> Path:
     """
-    Find the kompiled definiton directory for a `kbuild` target target:
-    * if the KIMP_${target.upper}_DIR is set --- use that
-    * otherwise ask `kbuild`
+    Find a `kdist` target:
+    * if KIMP_${target.upper}_DIR is set --- use that
+    * otherwise ask `kdist`
     """
 
-    def kbuild_definition_dir(target: str) -> Path:
-        proc_result = subprocess.run(
-            ['poetry', 'run', 'kbuild', 'which', target],
-            capture_output=True,
-        )
-        if proc_result.returncode:
-            _LOGGER.critical(
-                f'Could not find kbuild definition for target {target}. Run kbuild kompile {target}, or specify --definition.'
-            )
-            exit(proc_result.returncode)
-        else:
-            return Path(proc_result.stdout.splitlines()[0].decode())
-
-    env_definition_dir = os.environ.get(f'KIMP_{target.upper()}_DIR')
-    if env_definition_dir:
-        path = Path(env_definition_dir).resolve()
-        _LOGGER.info(f'Using kompiled definiton at {str(path)}')
+    env_target_dir = os.environ.get(f'KIMP_{target.upper()}_DIR')
+    if env_target_dir:
+        path = Path(env_target_dir).resolve()
+        _LOGGER.info(f'Using target at {path}')
         return path
     else:
-        return kbuild_definition_dir(target)
+        from pyk.kdist import kdist
+
+        return kdist.which(f'imp-semantics.{target}')
 
 
 def find_k_src_dir() -> Path:
@@ -90,7 +78,7 @@ def exec_run(
 
     imp_parser = None
     if definition_dir is None:
-        definition_dir_path = find_definiton_dir('llvm')
+        definition_dir_path = find_target('llvm')
         imp_parser = definition_dir_path / 'parser_Stmt_STATEMENTS-SYNTAX'
         if not imp_parser.is_file():
             imp_parser = gen_glr_parser(
@@ -132,8 +120,8 @@ def exec_prove(
     **kwargs: Any,
 ) -> None:
     if definition_dir is None:
-        definition_dir = str(find_definiton_dir('haskell'))
-    k_src_dir = str(find_k_src_dir())
+        definition_dir = str(find_target('haskell'))
+    k_src_dir = str(find_target('source') / 'imp-semantics')
 
     kimp = KIMP(definition_dir, definition_dir, None)
 
@@ -167,7 +155,7 @@ def exec_show(
     claim_id: str,
     **kwargs: Any,
 ) -> None:
-    definition_dir = str(find_definiton_dir('haskell'))
+    definition_dir = str(find_target('haskell'))
     kimp = KIMP(definition_dir, definition_dir, None)
     kimp.show_kcfg(spec_module, claim_id)
 
@@ -178,7 +166,7 @@ def exec_view(
     claim_id: str,
     **kwargs: Any,
 ) -> None:
-    definition_dir = str(find_definiton_dir('haskell'))
+    definition_dir = str(find_target('haskell'))
     kimp = KIMP(definition_dir, definition_dir, None)
     kimp.view_kcfg(spec_module, claim_id)
 
