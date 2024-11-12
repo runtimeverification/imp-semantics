@@ -1,0 +1,65 @@
+name: 'Test PR'
+on:
+  pull_request:
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  code-quality-checks:
+    name: 'Code Quality Checks & Unit Tests'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: kimp
+    steps:
+      - name: 'Check out code'
+        uses: actions/checkout@v4
+      - name: 'Install Python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: 'Install Poetry'
+        uses: Gr1N/setup-poetry@v9
+      - name: 'Run code quality checks'
+        run: make check
+      - name: 'Run pyupgrade'
+        run: make pyupgrade
+      - name: 'Run unit tests'
+        run: make cov-unit
+
+  integration-tests:
+    name: 'Integration Tests'
+    runs-on: [self-hosted, linux, normal]
+    timeout-minutes: 5
+    env:
+      CONTAINER: imp-integration-${{ github.sha }}
+    steps:
+      - name: 'Check out code'
+        uses: actions/checkout@v4
+      - name: 'Set up Docker'
+        uses: ./.github/actions/with-docker
+        with:
+          container-name: ${CONTAINER}
+      - name: 'Build and run integration tests'
+        run: docker exec -u user ${CONTAINER} make -C kimp cov-integration
+      - name: 'Tear down Docker container'
+        if: always()
+        run: |
+          docker stop --time=0 ${CONTAINER}
+
+  docker-tests:
+    name: 'Docker Tests'
+    runs-on: [self-hosted, linux, normal]
+    timeout-minutes: 5
+    env:
+      TAG: ${{ github.sha }}
+      CONTAINER: imp-docker-${{ github.sha }}
+    steps:
+      - name: 'Check out code'
+        uses: actions/checkout@v4
+      - name: 'Build Docker image'
+        run: make docker TAG=${TAG}
+      - name: 'Run smoke tests'
+        run: docker run --rm --name ${CONTAINER} ${TAG} ./smoke-test.sh
