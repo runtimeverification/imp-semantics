@@ -21,6 +21,7 @@ from pyk.kast.outer import read_kast_definition
 from pyk.kcfg.explore import KCFGExplore
 from pyk.kcfg.semantics import KCFGSemantics
 from pyk.kore.rpc import KoreClient, kore_server
+from pyk.ktool.claim_loader import ClaimLoader
 from pyk.ktool.kprove import KProve
 from pyk.ktool.krun import KRun, KRunOutput, _krun
 from pyk.proof.reachability import APRProof, APRProver
@@ -173,7 +174,7 @@ class KIMP:
     ) -> None:
         include_dirs = [Path(include) for include in includes]
 
-        claims = self.kprove.get_claims(
+        claims = ClaimLoader(self.kprove).load_claims(
             Path(spec_file), spec_module_name=spec_module, claim_labels=[claim_id], include_dirs=include_dirs
         )
         claim = single(claims)
