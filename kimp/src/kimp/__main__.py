@@ -64,6 +64,7 @@ def main() -> None:
 
 def exec_run(
     input_file: Path,
+    env_list: list[list[tuple[str, int]]] | None,
     definition_dir: Path | None,
     depth: int | None = None,
     **kwargs: Any,
@@ -71,7 +72,8 @@ def exec_run(
     definition_dir = find_target('llvm') if definition_dir is None else definition_dir
     kimp = KImp(definition_dir, definition_dir)
     pgm = input_file.read_text()
-    pattern = kimp.pattern(pgm=pgm, env={})
+    env = {var: val for assign in env_list for var, val in assign} if env_list else {}
+    pattern = kimp.pattern(pgm=pgm, env=env)
     output = kimp.run(pattern, depth=depth)
     print(kimp.pretty(output))
 
@@ -173,21 +175,18 @@ def create_argument_parser() -> ArgumentParser:
     explore_args = ArgumentParser(add_help=False)
     explore_args.add_argument(
         '--reinit',
-        dest='reinit',
         default=False,
         action='store_true',
         help='Reinitialize proof even if it already exists.',
     )
     explore_args.add_argument(
         '--max-depth',
-        dest='max_depth',
         default=100,
         type=int,
         help='Max depth of execution',
     )
     explore_args.add_argument(
         '--max-iterations',
-        dest='max_iterations',
         default=1000,
         type=int,
         help='Store every Nth state in the CFG for inspection.',
@@ -197,11 +196,20 @@ def create_argument_parser() -> ArgumentParser:
     command_parser = parser.add_subparsers(dest='command', required=True, help='Command to execute')
 
     # Run
+    def env(s: str) -> list[tuple[str, int]]:
+        return [(var.strip(), int(val)) for var, val in (assign.split('=') for assign in s.split(','))]
+
     run_subparser = command_parser.add_parser('run', help='Run an IMP program', parents=[shared_args])
     run_subparser.add_argument('input_file', metavar='INPUT_FILE', type=file_path, help='Path to .imp file')
     run_subparser.add_argument(
+        '--env',
+        dest='env_list',
+        action='append',
+        type=env,
+        help='Assigments of initial values in form x=0,y=1,...',
+    )
+    run_subparser.add_argument(
         '--depth',
-        dest='depth',
         type=int,
         help='Execute at most DEPTH rewrite steps',
     )
