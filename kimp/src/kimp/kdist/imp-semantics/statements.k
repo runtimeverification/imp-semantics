@@ -40,14 +40,13 @@ module STATEMENTS-RULES
 endmodule
 
 module STATEMENTS
-
   imports EXPRESSIONS
   imports VARIABLES-SYNTAX
   imports STATEMENTS-RULES
 
   configuration
     <k> $PGM:Stmt </k>   // changed!
-    <env> .Map    </env>
+    <env> $ENV:Map </env>
 
   // changed configuration, need to repeat the variable rule
   rule

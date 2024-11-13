@@ -4,12 +4,9 @@ import logging
 import os
 from argparse import ArgumentParser
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Final
 
 from pyk.cli.utils import dir_path, file_path
-from pyk.ktool.kprint import KAstOutput
-from pyk.ktool.krun import KRunOutput
 
 from .kimp import KImp
 
@@ -66,37 +63,17 @@ def main() -> None:
 
 
 def exec_run(
-    input_file: str,
-    definition_dir: str,
-    input_term: str | None = None,
-    output: str = 'none',
-    ignore_return_code: bool = False,
+    input_file: Path,
+    definition_dir: Path | None,
     depth: int | None = None,
     **kwargs: Any,
 ) -> None:
-    krun_output = KRunOutput[output.upper()]
-
-    definition_dir_path = find_target('llvm') if definition_dir is None else Path(definition_dir)
-    kimp = KImp(definition_dir_path, definition_dir_path)
-
-    try:
-        with NamedTemporaryFile(mode='w') as f:
-            temp_file = Path(f.name)
-            if input_term is not None:
-                temp_file.write_text(input_term)
-            else:
-                temp_file.write_text(Path(input_file).read_text())
-            proc_res = kimp.run_program(temp_file, output=krun_output, depth=depth)
-            if output != KAstOutput.NONE:
-                print(proc_res.stdout)
-    except RuntimeError as err:
-        if ignore_return_code:
-            msg, stdout, stderr = err.args
-            print(stdout)
-            print(stderr)
-            print(msg)
-        else:
-            raise
+    definition_dir = find_target('llvm') if definition_dir is None else definition_dir
+    kimp = KImp(definition_dir, definition_dir)
+    pgm = input_file.read_text()
+    pattern = kimp.pattern(pgm=pgm, env={})
+    output = kimp.run(pattern, depth=depth)
+    print(kimp.pretty(output))
 
 
 def exec_prove(
@@ -169,7 +146,6 @@ def create_argument_parser() -> ArgumentParser:
     shared_args.add_argument(
         '--definition',
         dest='definition_dir',
-        nargs='?',
         type=dir_path,
         help='Path to compiled K definition to use.',
     )
@@ -222,33 +198,7 @@ def create_argument_parser() -> ArgumentParser:
 
     # Run
     run_subparser = command_parser.add_parser('run', help='Run an IMP program', parents=[shared_args])
-    input_group = run_subparser.add_mutually_exclusive_group(required=True)
-    input_group.add_argument(
-        '--input-file',
-        type=file_path,
-        help='Path to .imp file',
-    )
-    input_group.add_argument(
-        '--input-term',
-        dest='input_term',
-        type=str,
-        help='Program to run, as a literal string',
-    )
-    run_subparser.add_argument(
-        '--output',
-        dest='output',
-        type=str,
-        default='pretty',
-        help='Output mode',
-        choices=['pretty', 'program', 'json', 'kore', 'kast', 'none'],
-        required=False,
-    )
-    run_subparser.add_argument(
-        '--ignore-return-code',
-        action='store_true',
-        default=False,
-        help='Ignore return code of krun, alwasys return 0 (use for debugging only)',
-    )
+    run_subparser.add_argument('input_file', metavar='INPUT_FILE', type=file_path, help='Path to .imp file')
     run_subparser.add_argument(
         '--depth',
         dest='depth',
