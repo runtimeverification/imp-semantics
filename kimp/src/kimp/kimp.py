@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pyk.kcfg.show import NodePrinter
 
-__all__ = ['KIMP']
+__all__ = ['KImp']
 
 import logging
 from contextlib import contextmanager
@@ -87,7 +87,7 @@ class ImpSemantics(KCFGSemantics):
 
 @final
 @dataclass(frozen=True)
-class KIMP:
+class KImp:
     llvm_dir: Path
     haskell_dir: Path
     proof_dir: Path
@@ -217,7 +217,7 @@ class KIMP:
         claim_id: str,
     ) -> None:
         proof = APRProof.read_proof_data(proof_dir=self.proof_dir, id=f'{spec_module}.{claim_id}')
-        kcfg_viewer = APRProofViewer(proof, self.kprove, node_printer=KIMPNodePrinter(kimp=self))
+        kcfg_viewer = APRProofViewer(proof, self.kprove, node_printer=ImpNodePrinter(kimp=self))
         kcfg_viewer.run()
 
     def show_kcfg(
@@ -226,7 +226,7 @@ class KIMP:
         claim_id: str,
     ) -> None:
         proof = APRProof.read_proof_data(proof_dir=self.proof_dir, id=f'{spec_module}.{claim_id}')
-        proof_show = APRProofShow(self.kprove, node_printer=KIMPNodePrinter(kimp=self))
+        proof_show = APRProofShow(self.kprove, node_printer=ImpNodePrinter(kimp=self))
         res_lines = proof_show.show(
             proof,
         )
@@ -298,10 +298,10 @@ def legacy_explore(
             )
 
 
-class KIMPNodePrinter(NodePrinter):
-    kimp: KIMP
+class ImpNodePrinter(NodePrinter):
+    kimp: KImp
 
-    def __init__(self, kimp: KIMP):
+    def __init__(self, kimp: KImp):
         NodePrinter.__init__(self, kimp.kprove)
         self.kimp = kimp
 
