@@ -5,15 +5,15 @@ module STATEMENTS-SYNTAX
   imports EXPRESSIONS-SYNTAX
   imports VARIABLES-SYNTAX
 
-  syntax Stmt ::= Id "=" Expr ";"                    [strict(2)]
-                | "if" "(" Expr ")" Stmt "else" Stmt [strict(1), avoid] // dangling else
-                | "if" "(" Expr ")" Stmt
-                | "while" "(" Expr ")" Stmt          // not strict!
+  syntax Stmt ::= Id "=" Expr ";"                    [strict(2), format(%1 %2 %3%4)]
+                | "if" "(" Expr ")" Stmt "else" Stmt [strict(1), avoid, format(%1 %2%3%4% %5 %6 %7)] // dangling else
+                | "if" "(" Expr ")" Stmt             [format(%1 %2%3%4 %5)]
+                | "while" "(" Expr ")" Stmt          [format(%1 %2%3%4 %5)] // not strict!
                 // blocks of statements
-                | "{" Stmt "}"
-                | "{" "}"
+                | "{" Stmt "}"                       [format(%1%i%n%2%d%n%3)]
+                | "{" "}"                            [format(%1%2)]
                 > right:
-                  Stmt Stmt
+                  Stmt Stmt                          [format(%1%n%2)]
 endmodule
 
 module STATEMENTS-RULES

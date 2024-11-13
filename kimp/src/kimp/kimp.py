@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pyk.kast.pretty import paren
 from pyk.kcfg.show import NodePrinter
 
 __all__ = ['KIMP']
@@ -15,11 +14,14 @@ from typing import TYPE_CHECKING, final
 
 from pyk.cli.utils import check_dir_path, check_file_path
 from pyk.cterm.symbolic import CTermSymbolic
+from pyk.kast.formatter import Formatter
 from pyk.kast.inner import KApply, KLabel, KSequence, KVariable
 from pyk.kast.manip import ml_pred_to_bool
+from pyk.kast.outer import read_kast_definition
 from pyk.kcfg.explore import KCFGExplore
 from pyk.kcfg.semantics import KCFGSemantics
 from pyk.kore.rpc import KoreClient, kore_server
+from pyk.ktool.claim_loader import ClaimLoader
 from pyk.ktool.kprove import KProve
 from pyk.ktool.krun import KRun, KRunOutput, _krun
 from pyk.proof.reachability import APRProof, APRProver
@@ -33,7 +35,7 @@ if TYPE_CHECKING:
     from typing import Final
 
     from pyk.cterm.cterm import CTerm
-    from pyk.kast.pretty import SymbolTable
+    from pyk.kast.outer import KDefinition
     from pyk.kcfg.kcfg import KCFG, KCFGExtendResult
     from pyk.kore.rpc import FallbackReason
     from pyk.ktool.kprint import KPrint
@@ -88,10 +90,9 @@ class ImpSemantics(KCFGSemantics):
 class KIMP:
     llvm_dir: Path
     haskell_dir: Path
-    imp_parser: Path
     proof_dir: Path
 
-    def __init__(self, llvm_dir: str | Path, haskell_dir: str | Path, imp_parser: Path | None):
+    def __init__(self, llvm_dir: str | Path, haskell_dir: str | Path):
         llvm_dir = Path(llvm_dir)
         check_dir_path(llvm_dir)
 
@@ -103,16 +104,23 @@ class KIMP:
 
         object.__setattr__(self, 'llvm_dir', llvm_dir)
         object.__setattr__(self, 'haskell_dir', haskell_dir)
-        if imp_parser is not None:
-            object.__setattr__(self, 'imp_parser', imp_parser)
         object.__setattr__(self, 'proof_dir', proof_dir)
 
     @cached_property
+    def parser(self) -> Path:
+        return self.llvm_dir / 'parser_PGM'
+
+    @cached_property
+    def definition(self) -> KDefinition:
+        return read_kast_definition(self.llvm_dir / 'compiled.json')
+
+    @cached_property
+    def format(self) -> Formatter:
+        return Formatter(self.definition)
+
+    @cached_property
     def kprove(self) -> KProve:
-        kprove = KProve(
-            definition_dir=self.haskell_dir, use_directory=self.proof_dir, patch_symbol_table=KIMP._patch_symbol_table
-        )
-        return kprove
+        return KProve(definition_dir=self.haskell_dir, use_directory=self.proof_dir)
 
     @cached_property
     def krun(self) -> KRun:
@@ -136,7 +144,7 @@ class KIMP:
                 check=check,
                 depth=depth,
                 pipe_stderr=True,
-                pmap={'PGM': str(self.imp_parser)} if hasattr(self, 'imp_parser') else {},
+                pmap={'PGM': str(self.parser)},
             )
 
         def preprocess_and_run(program_file: Path, temp_file: Path) -> CompletedProcess:
@@ -166,7 +174,7 @@ class KIMP:
     ) -> None:
         include_dirs = [Path(include) for include in includes]
 
-        claims = self.kprove.get_claims(
+        claims = ClaimLoader(self.kprove).load_claims(
             Path(spec_file), spec_module_name=spec_module, claim_labels=[claim_id], include_dirs=include_dirs
         )
         claim = single(claims)
@@ -229,10 +237,6 @@ class KIMP:
         )
         print('\n'.join(res_lines))
 
-    @classmethod
-    def _patch_symbol_table(cls, symbol_table: SymbolTable) -> None:
-        symbol_table['_Map_'] = paren(lambda m1, m2: m1 + '\n' + m2)
-
 
 @contextmanager
 def legacy_explore(
@@ -280,7 +284,6 @@ def legacy_explore(
                     definition=kprint.definition,
                 )
                 yield KCFGExplore(
-                    # kore_client=client,
                     kcfg_semantics=kcfg_semantics,
                     id=id,
                     cterm_symbolic=cterm_symbolic,
@@ -308,19 +311,20 @@ class KIMPNodePrinter(NodePrinter):
         self.kimp = kimp
 
     def print_node(self, kcfg: KCFG, node: KCFG.Node) -> list[str]:
-        ret_strs = super().print_node(kcfg, node)
+        res = super().print_node(kcfg, node)
+
         k_cell = node.cterm.cell('K_CELL')
         env_cell = node.cterm.cell('ENV_CELL')
+
         # pretty-print the configuration
-        ret_strs += self.kimp.kprove.pretty_print(k_cell).splitlines()
-        ret_strs += ['env:']
-        ret_strs += [
-            '  ' + l.replace('( ', '').replace(' )', '') for l in self.kimp.kprove.pretty_print(env_cell).splitlines()
-        ]
+        res += self.kimp.format(k_cell).splitlines()
+        res += ['env:']
+        res += [f'  {line}' for line in self.kimp.format(env_cell).splitlines()]
+
         # pretty-print the constraints
         constraints = [ml_pred_to_bool(c) for c in node.cterm.constraints]
         if len(constraints) > 0:
-            ret_strs += ['constraints:']
-            for c in constraints:
-                ret_strs.append('  ' + self.kimp.kprove.pretty_print(c))
-        return ret_strs
+            res += ['constraints:']
+            res += [f'  {self.kimp.format(c)}' for c in constraints]
+
+        return res

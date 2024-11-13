@@ -8,7 +8,7 @@ from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Final
 
 from pyk.cli.utils import dir_path, file_path
-from pyk.ktool.kprint import KAstOutput, gen_glr_parser
+from pyk.ktool.kprint import KAstOutput
 from pyk.ktool.krun import KRunOutput
 
 from .kimp import KIMP
@@ -76,17 +76,8 @@ def exec_run(
 ) -> None:
     krun_output = KRunOutput[output.upper()]
 
-    imp_parser = None
-    if definition_dir is None:
-        definition_dir_path = find_target('llvm')
-        imp_parser = definition_dir_path / 'parser_Stmt_STATEMENTS-SYNTAX'
-        if not imp_parser.is_file():
-            imp_parser = gen_glr_parser(
-                imp_parser, definition_dir=definition_dir_path, module='STATEMENTS-SYNTAX', sort='Stmt'
-            )
-    else:
-        definition_dir_path = Path(definition_dir)
-    kimp = KIMP(definition_dir_path, definition_dir_path, imp_parser)
+    definition_dir_path = find_target('llvm') if definition_dir is None else Path(definition_dir)
+    kimp = KIMP(definition_dir_path, definition_dir_path)
 
     try:
         with NamedTemporaryFile(mode='w') as f:
@@ -123,7 +114,7 @@ def exec_prove(
         definition_dir = str(find_target('haskell'))
     k_src_dir = str(find_target('source') / 'imp-semantics')
 
-    kimp = KIMP(definition_dir, definition_dir, None)
+    kimp = KIMP(definition_dir, definition_dir)
 
     try:
         kimp.prove(
@@ -156,7 +147,7 @@ def exec_show(
     **kwargs: Any,
 ) -> None:
     definition_dir = str(find_target('haskell'))
-    kimp = KIMP(definition_dir, definition_dir, None)
+    kimp = KIMP(definition_dir, definition_dir)
     kimp.show_kcfg(spec_module, claim_id)
 
 
@@ -167,7 +158,7 @@ def exec_view(
     **kwargs: Any,
 ) -> None:
     definition_dir = str(find_target('haskell'))
-    kimp = KIMP(definition_dir, definition_dir, None)
+    kimp = KIMP(definition_dir, definition_dir)
     kimp.view_kcfg(spec_module, claim_id)
 
 
@@ -279,7 +270,7 @@ def create_argument_parser() -> ArgumentParser:
     # KCFG view
     command_parser.add_parser(
         'view',
-        help="Display a proof's symbolic execution tree in an intercative viewver",
+        help="Display a proof's symbolic execution tree in an intercative viewer",
         parents=[shared_args, claim_shared_args],
     )
 
