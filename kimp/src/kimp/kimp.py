@@ -23,7 +23,7 @@ from pyk.kcfg.semantics import KCFGSemantics
 from pyk.kore.rpc import KoreClient, kore_server
 from pyk.ktool.claim_loader import ClaimLoader
 from pyk.ktool.kprove import KProve
-from pyk.ktool.krun import KRun, KRunOutput, _krun
+from pyk.ktool.krun import KRunOutput, _krun
 from pyk.proof.reachability import APRProof, APRProver
 from pyk.proof.show import APRProofShow
 from pyk.proof.tui import APRProofViewer
@@ -121,11 +121,6 @@ class KIMP:
     @cached_property
     def kprove(self) -> KProve:
         return KProve(definition_dir=self.haskell_dir, use_directory=self.proof_dir)
-
-    @cached_property
-    def krun(self) -> KRun:
-        krun = KRun(definition_dir=self.llvm_dir)
-        return krun
 
     def run_program(
         self,
