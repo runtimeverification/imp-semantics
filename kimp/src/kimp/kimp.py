@@ -157,10 +157,10 @@ class KImp:
         kore_text = run_process_2(args, input=pgm).stdout
         return KoreParser(kore_text).pattern()
 
-    def pretty(self, pattern: Pattern) -> str:
+    def pretty(self, pattern: Pattern, color: bool | None = None) -> str:
         from pyk.kore.tools import kore_print
 
-        return kore_print(pattern, definition_dir=self.llvm_dir)
+        return kore_print(pattern, definition_dir=self.llvm_dir, color=bool(color))
 
     def prove(
         self,

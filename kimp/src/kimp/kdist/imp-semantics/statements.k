@@ -45,8 +45,8 @@ module STATEMENTS
   imports STATEMENTS-RULES
 
   configuration
-    <k> $PGM:Stmt </k>   // changed!
-    <env> $ENV:Map </env>
+    <k   color="green"> $PGM:Stmt </k>   // changed!
+    <env color="yellow">   $ENV:Map  </env>
 
   // changed configuration, need to repeat the variable rule
   rule

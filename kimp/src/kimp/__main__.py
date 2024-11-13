@@ -75,7 +75,7 @@ def exec_run(
     env = {var: val for assign in env_list for var, val in assign} if env_list else {}
     pattern = kimp.pattern(pgm=pgm, env=env)
     output = kimp.run(pattern, depth=depth)
-    print(kimp.pretty(output))
+    print(kimp.pretty(output, color=True))
 
 
 def exec_prove(
