@@ -49,33 +49,18 @@ def exec_prove(
     claim_id: str,
     max_iterations: int,
     max_depth: int,
-    ignore_return_code: bool = False,
     reinit: bool = False,
     **kwargs: Any,
 ) -> None:
     kimp = KImp()
-
-    try:
-        kimp.prove(
-            spec_file=spec_file,
-            spec_module=spec_module,
-            claim_id=claim_id,
-            max_iterations=max_iterations,
-            max_depth=max_depth,
-            includes=[str(kimp.dist.source_dir / 'imp-semantics')],
-            reinit=reinit,
-        )
-    except ValueError as err:
-        _LOGGER.critical(err.args)
-        raise
-    except RuntimeError as err:
-        if ignore_return_code:
-            msg, stdout, stderr = err.args
-            print(stdout)
-            print(stderr)
-            print(msg)
-        else:
-            raise
+    kimp.prove(
+        spec_file=spec_file,
+        spec_module=spec_module,
+        claim_id=claim_id,
+        max_iterations=max_iterations,
+        max_depth=max_depth,
+        reinit=reinit,
+    )
 
 
 def exec_show(

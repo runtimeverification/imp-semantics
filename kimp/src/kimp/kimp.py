@@ -209,18 +209,24 @@ class KImp:
 
     def prove(
         self,
+        *,
         spec_file: str,
         spec_module: str,
-        includes: Iterable[str],
         claim_id: str,
         max_iterations: int,
         max_depth: int,
         reinit: bool,
+        includes: Iterable[str | Path] | None = None,
     ) -> None:
-        include_dirs = [Path(include) for include in includes]
+        include_dirs = [self.dist.source_dir / 'imp-semantics'] + (
+            [Path(include) for include in includes] if includes is not None else []
+        )
 
         claims = ClaimLoader(self.kprove).load_claims(
-            Path(spec_file), spec_module_name=spec_module, claim_labels=[claim_id], include_dirs=include_dirs
+            Path(spec_file),
+            spec_module_name=spec_module,
+            claim_labels=[claim_id],
+            include_dirs=include_dirs,
         )
         claim = single(claims)
         spec_label = f'{spec_module}.{claim_id}'
