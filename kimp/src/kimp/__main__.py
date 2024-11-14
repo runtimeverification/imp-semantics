@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
 
-from pyk.cli.utils import dir_path, file_path
+from pyk.cli.utils import file_path
 
 from .kimp import KImp
 
@@ -65,11 +65,10 @@ def main() -> None:
 def exec_run(
     input_file: Path,
     env_list: list[list[tuple[str, int]]] | None,
-    definition_dir: Path | None,
     depth: int | None = None,
     **kwargs: Any,
 ) -> None:
-    definition_dir = find_target('llvm') if definition_dir is None else definition_dir
+    definition_dir = find_target('llvm')
     kimp = KImp(definition_dir, definition_dir)
     pgm = input_file.read_text()
     env = {var: val for assign in env_list for var, val in assign} if env_list else {}
@@ -79,7 +78,6 @@ def exec_run(
 
 
 def exec_prove(
-    definition_dir: str,
     spec_file: str,
     spec_module: str,
     claim_id: str,
@@ -89,10 +87,8 @@ def exec_prove(
     reinit: bool = False,
     **kwargs: Any,
 ) -> None:
-    if definition_dir is None:
-        definition_dir = str(find_target('haskell'))
+    definition_dir = str(find_target('haskell'))
     k_src_dir = str(find_target('source') / 'imp-semantics')
-
     kimp = KImp(definition_dir, definition_dir)
 
     try:
@@ -119,7 +115,6 @@ def exec_prove(
 
 
 def exec_show(
-    definition_dir: str,
     spec_module: str,
     claim_id: str,
     **kwargs: Any,
@@ -130,7 +125,6 @@ def exec_show(
 
 
 def exec_view(
-    definition_dir: str,
     spec_module: str,
     claim_id: str,
     **kwargs: Any,
@@ -145,12 +139,6 @@ def create_argument_parser() -> ArgumentParser:
     shared_args = ArgumentParser(add_help=False)
     shared_args.add_argument('--verbose', '-v', default=False, action='store_true', help='Verbose output.')
     shared_args.add_argument('--debug', default=False, action='store_true', help='Debug output.')
-    shared_args.add_argument(
-        '--definition',
-        dest='definition_dir',
-        type=dir_path,
-        help='Path to compiled K definition to use.',
-    )
 
     # args shared by proof/prover/kcfg commands
     spec_file_shared_args = ArgumentParser(add_help=False)
