@@ -28,7 +28,7 @@ from pyk.proof.tui import APRProofViewer
 from pyk.utils import single
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator, Mapping
+    from collections.abc import Callable, Iterable, Iterator, Mapping
     from typing import Final
 
     from pyk.cterm.cterm import CTerm
@@ -206,6 +206,26 @@ class KImp:
         from pyk.kore.tools import kore_print
 
         return kore_print(pattern, definition_dir=self.dist.llvm_dir, color=bool(color))
+
+    def debug(self, pattern: Pattern) -> Callable[[int | None], None]:
+        """Return a closure that enables step-by-step debugging in a REPL.
+
+        Each call to the function pretty-prints the resulting configuration.
+
+        Example:
+            step = KImp().debug(pattern)
+            step()            # Run a single step
+            step(1)           # Run a single step
+            step(0)           # Just print the current configuration
+            step(bound=None)  # Run to completion
+        """
+
+        def step(bound: int | None = 1) -> None:
+            nonlocal pattern
+            pattern = self.run(pattern, depth=bound)
+            print(self.pretty(pattern, color=True))
+
+        return step
 
     def prove(
         self,
