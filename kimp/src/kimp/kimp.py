@@ -2,17 +2,16 @@ from __future__ import annotations
 
 from pyk.kcfg.show import NodePrinter
 
-__all__ = ['KIMP']
+__all__ = ['KImp']
 
 import logging
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import cached_property
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, final
 
-from pyk.cli.utils import check_dir_path, check_file_path
+from pyk.cli.utils import check_dir_path
 from pyk.cterm.symbolic import CTermSymbolic
 from pyk.kast.formatter import Formatter
 from pyk.kast.inner import KApply, KLabel, KSequence, KVariable
@@ -23,21 +22,20 @@ from pyk.kcfg.semantics import KCFGSemantics
 from pyk.kore.rpc import KoreClient, kore_server
 from pyk.ktool.claim_loader import ClaimLoader
 from pyk.ktool.kprove import KProve
-from pyk.ktool.krun import KRun, KRunOutput, _krun
 from pyk.proof.reachability import APRProof, APRProver
 from pyk.proof.show import APRProofShow
 from pyk.proof.tui import APRProofViewer
 from pyk.utils import single
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator
-    from subprocess import CompletedProcess
+    from collections.abc import Iterable, Iterator, Mapping
     from typing import Final
 
     from pyk.cterm.cterm import CTerm
     from pyk.kast.outer import KDefinition
     from pyk.kcfg.kcfg import KCFG, KCFGExtendResult
     from pyk.kore.rpc import FallbackReason
+    from pyk.kore.syntax import Pattern
     from pyk.ktool.kprint import KPrint
     from pyk.utils import BugReport
 
@@ -87,7 +85,7 @@ class ImpSemantics(KCFGSemantics):
 
 @final
 @dataclass(frozen=True)
-class KIMP:
+class KImp:
     llvm_dir: Path
     haskell_dir: Path
     proof_dir: Path
@@ -107,10 +105,6 @@ class KIMP:
         object.__setattr__(self, 'proof_dir', proof_dir)
 
     @cached_property
-    def parser(self) -> Path:
-        return self.llvm_dir / 'parser_PGM'
-
-    @cached_property
     def definition(self) -> KDefinition:
         return read_kast_definition(self.llvm_dir / 'compiled.json')
 
@@ -122,45 +116,51 @@ class KIMP:
     def kprove(self) -> KProve:
         return KProve(definition_dir=self.haskell_dir, use_directory=self.proof_dir)
 
-    @cached_property
-    def krun(self) -> KRun:
-        krun = KRun(definition_dir=self.llvm_dir)
-        return krun
-
-    def run_program(
+    def run(
         self,
-        program_file: str | Path,
+        pattern: Pattern,
         *,
-        output: KRunOutput = KRunOutput.NONE,
-        check: bool = True,
-        temp_file: str | Path | None = None,
-        depth: int | None,
-    ) -> CompletedProcess:
-        def run(program_file: Path) -> CompletedProcess:
-            return _krun(
-                input_file=program_file,
-                definition_dir=self.llvm_dir,
-                output=output,
-                check=check,
-                depth=depth,
-                pipe_stderr=True,
-                pmap={'PGM': str(self.parser)},
+        depth: int | None = None,
+    ) -> Pattern:
+        from pyk.ktool.krun import llvm_interpret
+
+        return llvm_interpret(definition_dir=self.llvm_dir, pattern=pattern, depth=depth)
+
+    def pattern(self, *, pgm: str, env: Mapping[str, int]) -> Pattern:
+        from pyk.kore.prelude import ID, INT, SORT_K_ITEM, inj, map_pattern, top_cell_initializer
+        from pyk.kore.syntax import DV, SortApp, String
+
+        pgm_pattern = self.parse(pgm)
+        env_pattern = map_pattern(
+            *(
+                (
+                    inj(ID, SORT_K_ITEM, DV(ID, String(var))),
+                    inj(INT, SORT_K_ITEM, DV(INT, String(str(val)))),
+                )
+                for var, val in env.items()
             )
+        )
+        return top_cell_initializer(
+            {
+                '$PGM': inj(SortApp('SortStmt'), SORT_K_ITEM, pgm_pattern),
+                '$ENV': inj(SortApp('SortMap'), SORT_K_ITEM, env_pattern),
+            }
+        )
 
-        def preprocess_and_run(program_file: Path, temp_file: Path) -> CompletedProcess:
-            temp_file.write_text(program_file.read_text())
-            return run(temp_file)
+    def parse(self, pgm: str) -> Pattern:
+        from pyk.kore.parser import KoreParser
+        from pyk.utils import run_process_2
 
-        program_file = Path(program_file)
-        check_file_path(program_file)
+        parser = self.llvm_dir / 'parser_PGM'
+        args = [str(parser), '/dev/stdin']
 
-        if temp_file is None:
-            with NamedTemporaryFile(mode='w') as f:
-                temp_file = Path(f.name)
-                return preprocess_and_run(program_file, temp_file)
+        kore_text = run_process_2(args, input=pgm).stdout
+        return KoreParser(kore_text).pattern()
 
-        temp_file = Path(temp_file)
-        return preprocess_and_run(program_file, temp_file)
+    def pretty(self, pattern: Pattern, color: bool | None = None) -> str:
+        from pyk.kore.tools import kore_print
+
+        return kore_print(pattern, definition_dir=self.llvm_dir, color=bool(color))
 
     def prove(
         self,
@@ -222,7 +222,7 @@ class KIMP:
         claim_id: str,
     ) -> None:
         proof = APRProof.read_proof_data(proof_dir=self.proof_dir, id=f'{spec_module}.{claim_id}')
-        kcfg_viewer = APRProofViewer(proof, self.kprove, node_printer=KIMPNodePrinter(kimp=self))
+        kcfg_viewer = APRProofViewer(proof, self.kprove, node_printer=ImpNodePrinter(kimp=self))
         kcfg_viewer.run()
 
     def show_kcfg(
@@ -231,7 +231,7 @@ class KIMP:
         claim_id: str,
     ) -> None:
         proof = APRProof.read_proof_data(proof_dir=self.proof_dir, id=f'{spec_module}.{claim_id}')
-        proof_show = APRProofShow(self.kprove, node_printer=KIMPNodePrinter(kimp=self))
+        proof_show = APRProofShow(self.kprove, node_printer=ImpNodePrinter(kimp=self))
         res_lines = proof_show.show(
             proof,
         )
@@ -303,10 +303,10 @@ def legacy_explore(
             )
 
 
-class KIMPNodePrinter(NodePrinter):
-    kimp: KIMP
+class ImpNodePrinter(NodePrinter):
+    kimp: KImp
 
-    def __init__(self, kimp: KIMP):
+    def __init__(self, kimp: KImp):
         NodePrinter.__init__(self, kimp.kprove)
         self.kimp = kimp
 

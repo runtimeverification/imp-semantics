@@ -19,17 +19,18 @@ endmodule
 module STATEMENTS-RULES
   imports STATEMENTS-SYNTAX
 
-  rule if ( true  ) E1 else _  => E1
-  rule if ( false ) _  else E2 => E2
+  rule [if-true]:  if ( true  ) E1 else _  => E1
+  rule [if-false]: if ( false ) _  else E2 => E2
 
-  rule if ( C ) E => if ( C ) E else {}
+  rule [if-else]: if ( C ) E => if ( C ) E else {}
 
   rule [while]:
     while ( C ) E
-    => if ( C ) {
-        E
-        while ( C ) E
-       }
+    =>
+    if ( C ) {
+      E
+      while ( C ) E
+    }
 
   rule [block]: { E } => E ~> {}
 
@@ -40,22 +41,21 @@ module STATEMENTS-RULES
 endmodule
 
 module STATEMENTS
-
   imports EXPRESSIONS
   imports VARIABLES-SYNTAX
   imports STATEMENTS-RULES
 
   configuration
-    <k> $PGM:Stmt </k>   // changed!
-    <env> .Map    </env>
+    <k   color="green">  $PGM:Stmt </k>   // changed!
+    <env color="yellow"> $ENV:Map  </env>
 
   // changed configuration, need to repeat the variable rule
-  rule
+  rule [var]:
     <k> X:Id => V ...</k>
     <env> X |-> V ...</env>
 
   // assignment rule accesses configuration
-  rule
+  rule [assign]:
     <k> X = V:Value ; => .K ...</k>
     <env> E => E [ X <- V ] </env>
 endmodule

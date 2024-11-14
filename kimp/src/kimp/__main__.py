@@ -4,14 +4,11 @@ import logging
 import os
 from argparse import ArgumentParser
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, Any, Final
 
 from pyk.cli.utils import dir_path, file_path
-from pyk.ktool.kprint import KAstOutput
-from pyk.ktool.krun import KRunOutput
 
-from .kimp import KIMP
+from .kimp import KImp
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -66,37 +63,19 @@ def main() -> None:
 
 
 def exec_run(
-    input_file: str,
-    definition_dir: str,
-    input_term: str | None = None,
-    output: str = 'none',
-    ignore_return_code: bool = False,
+    input_file: Path,
+    env_list: list[list[tuple[str, int]]] | None,
+    definition_dir: Path | None,
     depth: int | None = None,
     **kwargs: Any,
 ) -> None:
-    krun_output = KRunOutput[output.upper()]
-
-    definition_dir_path = find_target('llvm') if definition_dir is None else Path(definition_dir)
-    kimp = KIMP(definition_dir_path, definition_dir_path)
-
-    try:
-        with NamedTemporaryFile(mode='w') as f:
-            temp_file = Path(f.name)
-            if input_term is not None:
-                temp_file.write_text(input_term)
-            else:
-                temp_file.write_text(Path(input_file).read_text())
-            proc_res = kimp.run_program(temp_file, output=krun_output, depth=depth)
-            if output != KAstOutput.NONE:
-                print(proc_res.stdout)
-    except RuntimeError as err:
-        if ignore_return_code:
-            msg, stdout, stderr = err.args
-            print(stdout)
-            print(stderr)
-            print(msg)
-        else:
-            raise
+    definition_dir = find_target('llvm') if definition_dir is None else definition_dir
+    kimp = KImp(definition_dir, definition_dir)
+    pgm = input_file.read_text()
+    env = {var: val for assign in env_list for var, val in assign} if env_list else {}
+    pattern = kimp.pattern(pgm=pgm, env=env)
+    output = kimp.run(pattern, depth=depth)
+    print(kimp.pretty(output, color=True))
 
 
 def exec_prove(
@@ -114,7 +93,7 @@ def exec_prove(
         definition_dir = str(find_target('haskell'))
     k_src_dir = str(find_target('source') / 'imp-semantics')
 
-    kimp = KIMP(definition_dir, definition_dir)
+    kimp = KImp(definition_dir, definition_dir)
 
     try:
         kimp.prove(
@@ -128,7 +107,6 @@ def exec_prove(
         )
     except ValueError as err:
         _LOGGER.critical(err.args)
-        # exit(1)
         raise
     except RuntimeError as err:
         if ignore_return_code:
@@ -147,7 +125,7 @@ def exec_show(
     **kwargs: Any,
 ) -> None:
     definition_dir = str(find_target('haskell'))
-    kimp = KIMP(definition_dir, definition_dir)
+    kimp = KImp(definition_dir, definition_dir)
     kimp.show_kcfg(spec_module, claim_id)
 
 
@@ -158,7 +136,7 @@ def exec_view(
     **kwargs: Any,
 ) -> None:
     definition_dir = str(find_target('haskell'))
-    kimp = KIMP(definition_dir, definition_dir)
+    kimp = KImp(definition_dir, definition_dir)
     kimp.view_kcfg(spec_module, claim_id)
 
 
@@ -170,7 +148,6 @@ def create_argument_parser() -> ArgumentParser:
     shared_args.add_argument(
         '--definition',
         dest='definition_dir',
-        nargs='?',
         type=dir_path,
         help='Path to compiled K definition to use.',
     )
@@ -198,61 +175,41 @@ def create_argument_parser() -> ArgumentParser:
     explore_args = ArgumentParser(add_help=False)
     explore_args.add_argument(
         '--reinit',
-        dest='reinit',
         default=False,
         action='store_true',
         help='Reinitialize proof even if it already exists.',
     )
     explore_args.add_argument(
         '--max-depth',
-        dest='max_depth',
         default=100,
         type=int,
         help='Max depth of execution',
     )
     explore_args.add_argument(
         '--max-iterations',
-        dest='max_iterations',
         default=1000,
         type=int,
         help='Store every Nth state in the CFG for inspection.',
     )
 
-    parser = ArgumentParser(prog='kimp', description='KIMP command line tool')
+    parser = ArgumentParser(prog='kimp', description='KImp command line tool')
     command_parser = parser.add_subparsers(dest='command', required=True, help='Command to execute')
 
     # Run
+    def env(s: str) -> list[tuple[str, int]]:
+        return [(var.strip(), int(val)) for var, val in (assign.split('=') for assign in s.split(','))]
+
     run_subparser = command_parser.add_parser('run', help='Run an IMP program', parents=[shared_args])
-    input_group = run_subparser.add_mutually_exclusive_group(required=True)
-    input_group.add_argument(
-        '--input-file',
-        type=file_path,
-        help='Path to .imp file',
-    )
-    input_group.add_argument(
-        '--input-term',
-        dest='input_term',
-        type=str,
-        help='Program to run, as a literal string',
-    )
+    run_subparser.add_argument('input_file', metavar='INPUT_FILE', type=file_path, help='Path to .imp file')
     run_subparser.add_argument(
-        '--output',
-        dest='output',
-        type=str,
-        default='pretty',
-        help='Output mode',
-        choices=['pretty', 'program', 'json', 'kore', 'kast', 'none'],
-        required=False,
-    )
-    run_subparser.add_argument(
-        '--ignore-return-code',
-        action='store_true',
-        default=False,
-        help='Ignore return code of krun, alwasys return 0 (use for debugging only)',
+        '--env',
+        dest='env_list',
+        action='append',
+        type=env,
+        help='Assigments of initial values in form x=0,y=1,...',
     )
     run_subparser.add_argument(
         '--depth',
-        dest='depth',
         type=int,
         help='Execute at most DEPTH rewrite steps',
     )
