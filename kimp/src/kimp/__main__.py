@@ -1,52 +1,19 @@
 from __future__ import annotations
 
 import logging
-import os
 from argparse import ArgumentParser
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
 
-from pyk.cli.utils import dir_path, file_path
+from pyk.cli.utils import file_path
 
 from .kimp import KImp
 
 if TYPE_CHECKING:
     from argparse import Namespace
+    from pathlib import Path
 
 _LOGGER: Final = logging.getLogger(__name__)
 _LOG_FORMAT: Final = '%(levelname)s %(asctime)s %(name)s - %(message)s'
-
-
-def find_target(target: str) -> Path:
-    """
-    Find a `kdist` target:
-    * if KIMP_${target.upper}_DIR is set --- use that
-    * otherwise ask `kdist`
-    """
-
-    env_target_dir = os.environ.get(f'KIMP_{target.upper()}_DIR')
-    if env_target_dir:
-        path = Path(env_target_dir).resolve()
-        _LOGGER.info(f'Using target at {path}')
-        return path
-    else:
-        from pyk.kdist import kdist
-
-        return kdist.which(f'imp-semantics.{target}')
-
-
-def find_k_src_dir() -> Path:
-    """
-    A heuristic way to find the the k-src dir with the K sources is located:
-    * if KIMP_K_SRC environment variable is set --- use that
-    * otherwise, use ./k-src and hope it works
-    """
-    ksrc_dir_str = os.environ.get('KIMP_K_SRC')
-    if ksrc_dir_str is not None:
-        ksrc_dir = Path(ksrc_dir_str).resolve()
-    else:
-        ksrc_dir = Path('./k-src')
-    return ksrc_dir
 
 
 def main() -> None:
@@ -65,12 +32,10 @@ def main() -> None:
 def exec_run(
     input_file: Path,
     env_list: list[list[tuple[str, int]]] | None,
-    definition_dir: Path | None,
     depth: int | None = None,
     **kwargs: Any,
 ) -> None:
-    definition_dir = find_target('llvm') if definition_dir is None else definition_dir
-    kimp = KImp(definition_dir, definition_dir)
+    kimp = KImp()
     pgm = input_file.read_text()
     env = {var: val for assign in env_list for var, val in assign} if env_list else {}
     pattern = kimp.pattern(pgm=pgm, env=env)
@@ -79,64 +44,40 @@ def exec_run(
 
 
 def exec_prove(
-    definition_dir: str,
     spec_file: str,
     spec_module: str,
     claim_id: str,
     max_iterations: int,
     max_depth: int,
-    ignore_return_code: bool = False,
     reinit: bool = False,
     **kwargs: Any,
 ) -> None:
-    if definition_dir is None:
-        definition_dir = str(find_target('haskell'))
-    k_src_dir = str(find_target('source') / 'imp-semantics')
-
-    kimp = KImp(definition_dir, definition_dir)
-
-    try:
-        kimp.prove(
-            spec_file=spec_file,
-            spec_module=spec_module,
-            claim_id=claim_id,
-            max_iterations=max_iterations,
-            max_depth=max_depth,
-            includes=[k_src_dir],
-            reinit=reinit,
-        )
-    except ValueError as err:
-        _LOGGER.critical(err.args)
-        raise
-    except RuntimeError as err:
-        if ignore_return_code:
-            msg, stdout, stderr = err.args
-            print(stdout)
-            print(stderr)
-            print(msg)
-        else:
-            raise
+    kimp = KImp()
+    kimp.prove(
+        spec_file=spec_file,
+        spec_module=spec_module,
+        claim_id=claim_id,
+        max_iterations=max_iterations,
+        max_depth=max_depth,
+        reinit=reinit,
+    )
 
 
 def exec_show(
-    definition_dir: str,
     spec_module: str,
     claim_id: str,
     **kwargs: Any,
 ) -> None:
-    definition_dir = str(find_target('haskell'))
-    kimp = KImp(definition_dir, definition_dir)
+    kimp = KImp()
     kimp.show_kcfg(spec_module, claim_id)
 
 
 def exec_view(
-    definition_dir: str,
     spec_module: str,
     claim_id: str,
     **kwargs: Any,
 ) -> None:
-    definition_dir = str(find_target('haskell'))
-    kimp = KImp(definition_dir, definition_dir)
+    kimp = KImp()
     kimp.view_kcfg(spec_module, claim_id)
 
 
@@ -145,12 +86,6 @@ def create_argument_parser() -> ArgumentParser:
     shared_args = ArgumentParser(add_help=False)
     shared_args.add_argument('--verbose', '-v', default=False, action='store_true', help='Verbose output.')
     shared_args.add_argument('--debug', default=False, action='store_true', help='Debug output.')
-    shared_args.add_argument(
-        '--definition',
-        dest='definition_dir',
-        type=dir_path,
-        help='Path to compiled K definition to use.',
-    )
 
     # args shared by proof/prover/kcfg commands
     spec_file_shared_args = ArgumentParser(add_help=False)

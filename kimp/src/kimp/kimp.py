@@ -28,7 +28,7 @@ from pyk.proof.tui import APRProofViewer
 from pyk.utils import single
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator, Mapping
+    from collections.abc import Callable, Iterable, Iterator, Mapping
     from typing import Final
 
     from pyk.cterm.cterm import CTerm
@@ -85,28 +85,73 @@ class ImpSemantics(KCFGSemantics):
 
 @final
 @dataclass(frozen=True)
-class KImp:
+class ImpDist:
+    source_dir: Path
     llvm_dir: Path
     haskell_dir: Path
-    proof_dir: Path
 
-    def __init__(self, llvm_dir: str | Path, haskell_dir: str | Path):
+    def __init__(self, *, source_dir: str | Path, llvm_dir: str | Path, haskell_dir: str | Path):
+        source_dir = Path(source_dir)
+        check_dir_path(source_dir)
+
         llvm_dir = Path(llvm_dir)
         check_dir_path(llvm_dir)
 
         haskell_dir = Path(haskell_dir)
         check_dir_path(haskell_dir)
 
+        object.__setattr__(self, 'source_dir', source_dir)
+        object.__setattr__(self, 'llvm_dir', llvm_dir)
+        object.__setattr__(self, 'haskell_dir', haskell_dir)
+
+    @staticmethod
+    def load() -> ImpDist:
+        return ImpDist(
+            source_dir=ImpDist._find('source'),
+            llvm_dir=ImpDist._find('llvm'),
+            haskell_dir=ImpDist._find('haskell'),
+        )
+
+    @staticmethod
+    def _find(target: str) -> Path:
+        """
+        Find a `kdist` target:
+        * if KIMP_${target.upper}_DIR is set --- use that
+        * otherwise ask `kdist`
+        """
+
+        from os import getenv
+
+        from pyk.kdist import kdist
+
+        env_dir = getenv(f'KIMP_{target.upper()}_DIR')
+        if env_dir:
+            path = Path(env_dir)
+            check_dir_path(path)
+            _LOGGER.info(f'Using target at {path}')
+            return path
+
+        return kdist.get(f'imp-semantics.{target}')
+
+
+@final
+@dataclass(frozen=True)
+class KImp:
+    dist: ImpDist
+    proof_dir: Path
+
+    def __init__(self) -> None:
+        dist = ImpDist.load()
+
         proof_dir = Path('.') / '.kimp' / 'proofs'
         proof_dir.mkdir(exist_ok=True, parents=True)
 
-        object.__setattr__(self, 'llvm_dir', llvm_dir)
-        object.__setattr__(self, 'haskell_dir', haskell_dir)
+        object.__setattr__(self, 'dist', dist)
         object.__setattr__(self, 'proof_dir', proof_dir)
 
     @cached_property
     def definition(self) -> KDefinition:
-        return read_kast_definition(self.llvm_dir / 'compiled.json')
+        return read_kast_definition(self.dist.llvm_dir / 'compiled.json')
 
     @cached_property
     def format(self) -> Formatter:
@@ -114,7 +159,7 @@ class KImp:
 
     @cached_property
     def kprove(self) -> KProve:
-        return KProve(definition_dir=self.haskell_dir, use_directory=self.proof_dir)
+        return KProve(definition_dir=self.dist.haskell_dir, use_directory=self.proof_dir)
 
     def run(
         self,
@@ -124,7 +169,7 @@ class KImp:
     ) -> Pattern:
         from pyk.ktool.krun import llvm_interpret
 
-        return llvm_interpret(definition_dir=self.llvm_dir, pattern=pattern, depth=depth)
+        return llvm_interpret(definition_dir=self.dist.llvm_dir, pattern=pattern, depth=depth)
 
     def pattern(self, *, pgm: str, env: Mapping[str, int]) -> Pattern:
         from pyk.kore.prelude import ID, INT, SORT_K_ITEM, inj, map_pattern, top_cell_initializer
@@ -151,7 +196,7 @@ class KImp:
         from pyk.kore.parser import KoreParser
         from pyk.utils import run_process_2
 
-        parser = self.llvm_dir / 'parser_PGM'
+        parser = self.dist.llvm_dir / 'parser_PGM'
         args = [str(parser), '/dev/stdin']
 
         kore_text = run_process_2(args, input=pgm).stdout
@@ -160,22 +205,48 @@ class KImp:
     def pretty(self, pattern: Pattern, color: bool | None = None) -> str:
         from pyk.kore.tools import kore_print
 
-        return kore_print(pattern, definition_dir=self.llvm_dir, color=bool(color))
+        return kore_print(pattern, definition_dir=self.dist.llvm_dir, color=bool(color))
+
+    def debug(self, pattern: Pattern) -> Callable[[int | None], None]:
+        """Return a closure that enables step-by-step debugging in a REPL.
+
+        Each call to the function pretty-prints the resulting configuration.
+
+        Example:
+            step = KImp().debug(pattern)
+            step()            # Run a single step
+            step(1)           # Run a single step
+            step(0)           # Just print the current configuration
+            step(bound=None)  # Run to completion
+        """
+
+        def step(bound: int | None = 1) -> None:
+            nonlocal pattern
+            pattern = self.run(pattern, depth=bound)
+            print(self.pretty(pattern, color=True))
+
+        return step
 
     def prove(
         self,
+        *,
         spec_file: str,
         spec_module: str,
-        includes: Iterable[str],
         claim_id: str,
         max_iterations: int,
         max_depth: int,
         reinit: bool,
+        includes: Iterable[str | Path] | None = None,
     ) -> None:
-        include_dirs = [Path(include) for include in includes]
+        include_dirs = [self.dist.source_dir / 'imp-semantics'] + (
+            [Path(include) for include in includes] if includes is not None else []
+        )
 
         claims = ClaimLoader(self.kprove).load_claims(
-            Path(spec_file), spec_module_name=spec_module, claim_labels=[claim_id], include_dirs=include_dirs
+            Path(spec_file),
+            spec_module_name=spec_module,
+            claim_labels=[claim_id],
+            include_dirs=include_dirs,
         )
         claim = single(claims)
         spec_label = f'{spec_module}.{claim_id}'

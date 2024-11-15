@@ -11,23 +11,40 @@ KIMP consists of two major components:
 
 ## Trying it out in `docker` (EASY)
 
-We have prepared a Docker image that allows both using `kimp` as-is and hacking on it.
+The project defines a Docker image that allows both using `kimp` as-is and hacking on it.
 
 First off, clone the project and step into its directory:
 
 ```
 git clone https://github.com/runtimeverification/imp-semantics
 cd imp-semantics
-git checkout bob2024
 ```
 
-Use the following to start a container with an interactive shell:
+Then, build the image:
 
 ```
-docker run --rm -it -v "$PWD":/home/k-user/workspace -u $(id -u):$(id -g) geo2a/bob24:latest /bin/bash
+make docker TAG=imp-semantics:latest
 ```
 
-This command will download the docker image and mount the current working directory under `~/workspace`, ensuring you can work on the examples and have them transparently available in the container.
+Run the following command to start a container with an interactive shell:
+
+```
+docker run --rm -it imp-semantics:latest /bin/bash
+```
+
+The `examples` folder, as well as a test script `smoke-tests.sh` is already copied into the workspace.
+You can run the tests with:
+
+```
+./smoke-test.sh
+```
+
+To work with files from the host, run the countainer with a volume mounted.
+For example, the following command starts the container and mounts the current working directory under `~/workspace`, ensuring you can work on the examples and have them transparently available in the container.
+
+```
+docker run --rm -it -v "$PWD":/home/k-user/workspace -u $(id -u):$(id -g) imp-semantics:latest /bin/bash
+```
 
 If everything is up and running, feel free to jump straight to the **Usage** section below. If you don't want to use `docker`, read the next section to build `kimp` manually.
 
