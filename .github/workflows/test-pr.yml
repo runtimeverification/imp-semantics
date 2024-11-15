@@ -10,9 +10,6 @@ jobs:
     name: 'Code Quality Checks & Unit Tests'
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    defaults:
-      run:
-        working-directory: kimp
     steps:
       - name: 'Check out code'
         uses: actions/checkout@v4
@@ -43,7 +40,7 @@ jobs:
         with:
           container-name: ${CONTAINER}
       - name: 'Build and run integration tests'
-        run: docker exec -u user ${CONTAINER} make -C kimp cov-integration
+        run: docker exec -u user ${CONTAINER} make cov-integration
       - name: 'Tear down Docker container'
         if: always()
         run: |
