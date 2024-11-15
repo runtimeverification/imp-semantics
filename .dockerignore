@@ -1,7 +1,7 @@
 **/.krun*
 **/.kprove*
 **/.kimp
+**/*venv
 **/dist
 **/.mypy_cache
 **/.pytest_cache
-**/.venv*

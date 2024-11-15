@@ -25,8 +25,8 @@ ENV K_VERSION=${K_VERSION} \
 # install poetry
 RUN curl -sSL https://install.python-poetry.org | python3 -
 
-# install kimp and set env vars for it
-COPY --chown=k-user:k-group ./kimp /home/k-user/kimp-src
+# install kimp
+COPY --chown=k-user:k-group . /home/k-user/kimp-src
 RUN poetry -C /home/k-user/kimp-src build && \
     pip install /home/k-user/kimp-src/dist/*.whl && \
     rm -r /home/k-user/kimp-src && \
