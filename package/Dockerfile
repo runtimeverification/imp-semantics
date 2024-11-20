@@ -30,7 +30,7 @@ COPY --chown=k-user:k-group . /home/k-user/kimp-src
 RUN poetry -C /home/k-user/kimp-src build && \
     pip install /home/k-user/kimp-src/dist/*.whl && \
     rm -r /home/k-user/kimp-src && \
-    kdist --verbose build -j2
+    kdist --verbose build -j3
 
 WORKDIR /home/k-user/workspace
 COPY --chown=k-user:k-group examples examples
