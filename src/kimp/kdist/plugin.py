@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from pyk.kbuild.utils import k_version
 from pyk.kdist.api import Target
-from pyk.ktool.kompile import PykBackend, kompile
+from pyk.ktool.kompile import LLVMKompileType, PykBackend, kompile
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -48,6 +48,15 @@ __TARGETS__: Final = {
             'main_file': src_dir / 'imp-semantics/statements.k',
             'warnings_to_errors': True,
             'gen_glr_bison_parser': True,
+            'opt_level': 3,
+        },
+    ),
+    'llvm-lib': KompileTarget(
+        lambda src_dir: {
+            'backend': PykBackend.LLVM,
+            'main_file': src_dir / 'imp-semantics/statements.k',
+            'llvm_kompile_type': LLVMKompileType.C,
+            'warnings_to_errors': True,
             'opt_level': 3,
         },
     ),

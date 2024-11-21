@@ -19,7 +19,7 @@ from pyk.kast.manip import ml_pred_to_bool
 from pyk.kast.outer import read_kast_definition
 from pyk.kcfg.explore import KCFGExplore
 from pyk.kcfg.semantics import KCFGSemantics
-from pyk.kore.rpc import KoreClient, kore_server
+from pyk.kore.rpc import BoosterServer, KoreClient
 from pyk.ktool.claim_loader import ClaimLoader
 from pyk.ktool.kprove import KProve
 from pyk.proof.reachability import APRProof, APRProver
@@ -34,10 +34,7 @@ if TYPE_CHECKING:
     from pyk.cterm.cterm import CTerm
     from pyk.kast.outer import KDefinition
     from pyk.kcfg.kcfg import KCFG, KCFGExtendResult
-    from pyk.kore.rpc import FallbackReason
     from pyk.kore.syntax import Pattern
-    from pyk.ktool.kprint import KPrint
-    from pyk.utils import BugReport
 
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -88,20 +85,32 @@ class ImpSemantics(KCFGSemantics):
 class ImpDist:
     source_dir: Path
     llvm_dir: Path
+    llvm_lib_dir: Path
     haskell_dir: Path
 
-    def __init__(self, *, source_dir: str | Path, llvm_dir: str | Path, haskell_dir: str | Path):
+    def __init__(
+        self,
+        *,
+        source_dir: str | Path,
+        llvm_dir: str | Path,
+        llvm_lib_dir: str | Path,
+        haskell_dir: str | Path,
+    ):
         source_dir = Path(source_dir)
         check_dir_path(source_dir)
 
         llvm_dir = Path(llvm_dir)
         check_dir_path(llvm_dir)
 
+        llvm_lib_dir = Path(llvm_lib_dir)
+        check_dir_path(llvm_lib_dir)
+
         haskell_dir = Path(haskell_dir)
         check_dir_path(haskell_dir)
 
         object.__setattr__(self, 'source_dir', source_dir)
         object.__setattr__(self, 'llvm_dir', llvm_dir)
+        object.__setattr__(self, 'llvm_lib_dir', llvm_lib_dir)
         object.__setattr__(self, 'haskell_dir', haskell_dir)
 
     @staticmethod
@@ -109,6 +118,7 @@ class ImpDist:
         return ImpDist(
             source_dir=ImpDist._find('source'),
             llvm_dir=ImpDist._find('llvm'),
+            llvm_lib_dir=ImpDist._find('llvm-lib'),
             haskell_dir=ImpDist._find('haskell'),
         )
 
@@ -116,7 +126,7 @@ class ImpDist:
     def _find(target: str) -> Path:
         """
         Find a `kdist` target:
-        * if KIMP_${target.upper}_DIR is set --- use that
+        * if KIMP_<TARGET_IN_SCREAMING_SNAKE_CASE>_DIR is set --- use that
         * otherwise ask `kdist`
         """
 
@@ -124,7 +134,7 @@ class ImpDist:
 
         from pyk.kdist import kdist
 
-        env_dir = getenv(f'KIMP_{target.upper()}_DIR')
+        env_dir = getenv(f"KIMP_{target.replace('-', '_').upper()}_DIR")
         if env_dir:
             path = Path(env_dir)
             check_dir_path(path)
@@ -252,17 +262,13 @@ class KImp:
         spec_label = f'{spec_module}.{claim_id}'
 
         if not reinit and APRProof.proof_data_exists(spec_label, self.proof_dir):
-            # load an existing proof (to continue work in it)
+            # load an existing proof (to continue work on it)
             proof = APRProof.read_proof_data(proof_dir=self.proof_dir, id=f'{spec_module}.{claim_id}')
         else:
             # ignore existing proof data and reinitilize it from a claim
             proof = APRProof.from_claim(self.kprove.definition, claim=claim, logs={}, proof_dir=self.proof_dir)
 
-        with legacy_explore(
-            self.kprove,
-            kcfg_semantics=ImpSemantics(),
-            id=spec_label,
-        ) as kcfg_explore:
+        with self.explore(id=spec_label) as kcfg_explore:
             prover = APRProver(
                 kcfg_explore=kcfg_explore,
                 execute_depth=max_depth,
@@ -287,6 +293,26 @@ class KImp:
             print('To start the proof from scratch: ')
             print(f'  kimp prove --reinit {spec_file} {spec_module} {claim_id}')
 
+    @contextmanager
+    def explore(self, *, id: str) -> Iterator[KCFGExplore]:
+        with BoosterServer(
+            {
+                'kompiled_dir': self.kprove.definition_dir,
+                'llvm_kompiled_dir': self.dist.llvm_lib_dir,
+                'module_name': self.kprove.main_module,
+            }
+        ) as server:
+            with KoreClient('localhost', server.port) as client:
+                cterm_symbolic = cterm_symbolic = CTermSymbolic(
+                    kore_client=client,
+                    definition=self.kprove.definition,
+                )
+                yield KCFGExplore(
+                    kcfg_semantics=ImpSemantics(),
+                    id=id,
+                    cterm_symbolic=cterm_symbolic,
+                )
+
     def view_kcfg(
         self,
         spec_module: str,
@@ -307,71 +333,6 @@ class KImp:
             proof,
         )
         print('\n'.join(res_lines))
-
-
-@contextmanager
-def legacy_explore(
-    kprint: KPrint,
-    *,
-    kcfg_semantics: KCFGSemantics | None = None,
-    id: str | None = None,
-    port: int | None = None,
-    kore_rpc_command: str | Iterable[str] | None = None,
-    llvm_definition_dir: Path | None = None,
-    smt_timeout: int | None = None,
-    smt_retry_limit: int | None = None,
-    smt_tactic: str | None = None,
-    bug_report: BugReport | None = None,
-    log_axioms_file: Path | None = None,
-    start_server: bool = True,
-    fallback_on: Iterable[FallbackReason] | None = None,
-    interim_simplification: int | None = None,
-    no_post_exec_simplify: bool = False,
-) -> Iterator[KCFGExplore]:
-    if start_server:
-        with kore_server(
-            definition_dir=kprint.definition_dir,
-            llvm_definition_dir=llvm_definition_dir,
-            module_name=kprint.main_module,
-            port=port,
-            command=kore_rpc_command,
-            bug_report=bug_report,
-            smt_timeout=smt_timeout,
-            smt_retry_limit=smt_retry_limit,
-            smt_tactic=smt_tactic,
-            log_axioms_file=log_axioms_file,
-            fallback_on=fallback_on,
-            interim_simplification=interim_simplification,
-            no_post_exec_simplify=no_post_exec_simplify,
-        ) as server:
-            with KoreClient(
-                'localhost',
-                server.port,
-                bug_report=bug_report,
-                bug_report_id=id if bug_report else None,
-            ) as client:
-                cterm_symbolic = cterm_symbolic = CTermSymbolic(
-                    kore_client=client,
-                    definition=kprint.definition,
-                )
-                yield KCFGExplore(
-                    kcfg_semantics=kcfg_semantics,
-                    id=id,
-                    cterm_symbolic=cterm_symbolic,
-                )
-    else:
-        if port is None:
-            raise ValueError('Missing port with start_server=False')
-        with KoreClient('localhost', port, bug_report=bug_report, bug_report_id=id) as client:
-            cterm_symbolic = cterm_symbolic = CTermSymbolic(
-                kore_client=client,
-                definition=kprint.definition,
-            )
-            yield KCFGExplore(
-                kcfg_semantics=kcfg_semantics,
-                id=id,
-                cterm_symbolic=cterm_symbolic,
-            )
 
 
 class ImpNodePrinter(NodePrinter):
