@@ -132,7 +132,16 @@ def create_argument_parser() -> ArgumentParser:
 
     # Run
     def env(s: str) -> list[tuple[str, int]]:
-        return [(var.strip(), int(val)) for var, val in (assign.split('=') for assign in s.split(','))]
+        def parse(s: str) -> int:
+            match s:
+                case 'true':
+                    return True
+                case 'false':
+                    return False
+                case _:
+                    return int(s)
+
+        return [(var.strip(), parse(val)) for var, val in (assign.split('=') for assign in s.split(','))]
 
     run_subparser = command_parser.add_parser('run', help='Run an IMP program', parents=[shared_args])
     run_subparser.add_argument('input_file', metavar='INPUT_FILE', type=file_path, help='Path to .imp file')
