@@ -42,6 +42,15 @@ class KompileTarget(Target):
 
 __TARGETS__: Final = {
     'source': SourceTarget(),
+    'expr': KompileTarget(
+        lambda src_dir: {
+            'backend': PykBackend.LLVM,
+            'main_file': src_dir / 'imp-semantics/expr.k',
+            'warnings_to_errors': True,
+            'gen_glr_bison_parser': True,
+            'opt_level': 3,
+        },
+    ),
     'llvm': KompileTarget(
         lambda src_dir: {
             'backend': PykBackend.LLVM,
