@@ -8,28 +8,24 @@ module EXPRESSIONS-SYNTAX
   syntax KResult  ::= Value
 
   syntax Expr     ::= Value
-                    | "(" Expr ")" [bracket, format(%1%2%3)]
+                    | "(" Expr ")"   [bracket, format(%1%2%3)]
 
-  syntax Expr     ::= "-" Expr      [group(unary), strict, non-assoc, format(%1%2)]
+  syntax Expr     ::= "-" Expr       [group(unary), strict, non-assoc, format(%1%2)]
+                    | "!" Expr       [group(unary), strict, non-assoc, format(%1%2)]
                     > left:
-                      Expr "*" Expr [group(mul), seqstrict]
-                    | Expr "/" Expr [group(mul), seqstrict]
+                      Expr "*" Expr  [group(mul), seqstrict]
+                    | Expr "/" Expr  [group(mul), seqstrict]
                     > left:
-                      Expr "+" Expr [group(add), seqstrict]
-                    | Expr "-" Expr [group(add), strict]
-
-  syntax Expr     ::= Expr "==" Expr [group(comp), seqstrict, non-assoc]
+                      Expr "+" Expr  [group(add), seqstrict]
+                    | Expr "-" Expr  [group(add), strict]
+                    > Expr "==" Expr [group(comp), seqstrict, non-assoc]
                     | Expr "!=" Expr [group(comp), seqstrict, non-assoc]
                     | Expr ">=" Expr [group(comp), seqstrict, non-assoc]
                     | Expr ">"  Expr [group(comp), seqstrict, non-assoc]
                     | Expr "<=" Expr [group(comp), seqstrict, non-assoc]
                     | Expr "<"  Expr [group(comp), strict, non-assoc]
-
-  syntax Expr     ::= "!" Expr       [group(unary), strict, non-assoc, format(%1%2)]
                     > Expr "&&" Expr [group(bool), seqstrict, left]
                     > Expr "||" Expr [group(bool), seqstrict, left]
-
-  syntax priority unary > mul > add > comp > bool
 endmodule
 
 
