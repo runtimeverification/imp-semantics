@@ -1,9 +1,10 @@
-// requires "expressions.k" in scope via variables.k
-requires "variables.k"
+requires "expressions.k"
 
 module STATEMENTS-SYNTAX
   imports EXPRESSIONS-SYNTAX
-  imports VARIABLES-SYNTAX
+  imports ID-SYNTAX
+
+  syntax Expr ::= Id
 
   syntax Stmt ::= Id "=" Expr ";"                    [strict(2), format(%1 %2 %3%4)]
                 | "if" "(" Expr ")" Stmt "else" Stmt [strict(1), avoid, format(%1 %2%3%4% %5 %6 %7)] // dangling else
@@ -42,19 +43,16 @@ endmodule
 
 module STATEMENTS
   imports EXPRESSIONS
-  imports VARIABLES-SYNTAX
   imports STATEMENTS-RULES
 
   configuration
-    <k   color="green">  $PGM:Stmt </k>   // changed!
+    <k   color="green">  $PGM:Stmt </k>
     <env color="yellow"> $ENV:Map  </env>
 
-  // changed configuration, need to repeat the variable rule
   rule [var]:
     <k> X:Id => V ...</k>
     <env> X |-> V ...</env>
 
-  // assignment rule accesses configuration
   rule [assign]:
     <k> X = V:Value ; => .K ...</k>
     <env> E => E [ X <- V ] </env>
