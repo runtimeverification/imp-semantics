@@ -18,12 +18,12 @@ module EXPRESSIONS-SYNTAX
                     > left:
                       Expr "+" Expr  [seqstrict]
                     | Expr "-" Expr  [strict]
-                    > Expr "==" Expr [seqstrict, non-assoc]
-                    | Expr "!=" Expr [seqstrict, non-assoc]
-                    | Expr ">=" Expr [seqstrict, non-assoc]
+                    > Expr ">=" Expr [seqstrict, non-assoc]
                     | Expr ">"  Expr [seqstrict, non-assoc]
                     | Expr "<=" Expr [seqstrict, non-assoc]
                     | Expr "<"  Expr [strict, non-assoc]
+                    > Expr "==" Expr [seqstrict, non-assoc]
+                    | Expr "!=" Expr [seqstrict, non-assoc]
                     > Expr "&&" Expr [seqstrict, left]
                     > Expr "||" Expr [seqstrict, left]
 endmodule
