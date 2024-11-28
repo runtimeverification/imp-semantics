@@ -44,7 +44,7 @@ endmodule
 
 
 module STATEMENTS
-  imports EXPRESSIONS
+  imports EXPRESSIONS-RULES
   imports STATEMENTS-RULES
 
   configuration

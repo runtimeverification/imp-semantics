@@ -33,7 +33,7 @@ module EXPRESSIONS-SYNTAX
 endmodule
 
 
-module EXPRESSIONS
+module EXPRESSIONS-RULES
   imports EXPRESSIONS-SYNTAX
   imports INT
   imports BOOL
@@ -59,4 +59,11 @@ module EXPRESSIONS
   rule ! B => notBool B
   rule B1 && B2 => B1 andBool B2
   rule B1 || B2 => B1 orBool B2
+endmodule
+
+
+module EXPRESSIONS
+    imports EXPRESSIONS-RULES
+
+    configuration <k> $PGM:Expr </k>
 endmodule
