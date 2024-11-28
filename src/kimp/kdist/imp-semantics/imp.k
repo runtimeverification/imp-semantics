@@ -1,7 +1,7 @@
 requires "expr.k"
 
 
-module STATEMENTS-SYNTAX
+module IMP-SYNTAX
   imports EXPR-SYNTAX
   imports ID-SYNTAX
 
@@ -19,8 +19,8 @@ module STATEMENTS-SYNTAX
 endmodule
 
 
-module STATEMENTS-RULES
-  imports STATEMENTS-SYNTAX
+module IMP-RULES
+  imports IMP-SYNTAX
 
   rule [if-true]:  if ( true  ) E1 else _  => E1
   rule [if-false]: if ( false ) _  else E2 => E2
@@ -43,9 +43,9 @@ module STATEMENTS-RULES
 endmodule
 
 
-module STATEMENTS
+module IMP
   imports EXPR-RULES
-  imports STATEMENTS-RULES
+  imports IMP-RULES
 
   configuration
     <k   color="green">  $PGM:Stmt </k>
