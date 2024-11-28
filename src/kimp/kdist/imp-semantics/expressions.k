@@ -10,8 +10,8 @@ module EXPRESSIONS-SYNTAX
   syntax Expr     ::= Value
                     | "(" Expr ")"   [bracket, format(%1%2%3)]
 
-  syntax Expr     ::= "-" Expr       [strict, non-assoc, format(%1%2)]
-                    | "!" Expr       [strict, non-assoc, format(%1%2)]
+  syntax Expr     ::= "-" Expr       [strict, format(%1%2)]
+                    | "!" Expr       [strict, format(%1%2)]
                     > left:
                       Expr "*" Expr  [seqstrict]
                     | Expr "/" Expr  [seqstrict]
