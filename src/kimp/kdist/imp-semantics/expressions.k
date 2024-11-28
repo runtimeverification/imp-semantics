@@ -1,16 +1,11 @@
-module VALUE-SYNTAX
+module EXPRESSIONS-SYNTAX
   imports UNSIGNED-INT-SYNTAX
   imports BOOL-SYNTAX
 
-  syntax Value ::= Int
-                 | Bool
+  syntax Value    ::= Int
+                    | Bool
 
-  syntax KResult ::= Value
-endmodule
-
-
-module EXPRESSIONS-SYNTAX
-  imports VALUE-SYNTAX
+  syntax KResult  ::= Value
 
   syntax Expr     ::= Value
                     | "(" Expr ")" [bracket, format(%1%2%3)]
@@ -39,7 +34,7 @@ endmodule
 
 
 module EXPRESSIONS
-  imports EXPRESSIONS-SYNTAX // also imports VALUE-SYNTAX (transitive)
+  imports EXPRESSIONS-SYNTAX
   imports INT
   imports BOOL
 
