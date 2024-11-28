@@ -10,22 +10,22 @@ module EXPRESSIONS-SYNTAX
   syntax Expr     ::= Value
                     | "(" Expr ")"   [bracket, format(%1%2%3)]
 
-  syntax Expr     ::= "-" Expr       [group(unary), strict, non-assoc, format(%1%2)]
-                    | "!" Expr       [group(unary), strict, non-assoc, format(%1%2)]
+  syntax Expr     ::= "-" Expr       [strict, non-assoc, format(%1%2)]
+                    | "!" Expr       [strict, non-assoc, format(%1%2)]
                     > left:
-                      Expr "*" Expr  [group(mul), seqstrict]
-                    | Expr "/" Expr  [group(mul), seqstrict]
+                      Expr "*" Expr  [seqstrict]
+                    | Expr "/" Expr  [seqstrict]
                     > left:
-                      Expr "+" Expr  [group(add), seqstrict]
-                    | Expr "-" Expr  [group(add), strict]
-                    > Expr "==" Expr [group(comp), seqstrict, non-assoc]
-                    | Expr "!=" Expr [group(comp), seqstrict, non-assoc]
-                    | Expr ">=" Expr [group(comp), seqstrict, non-assoc]
-                    | Expr ">"  Expr [group(comp), seqstrict, non-assoc]
-                    | Expr "<=" Expr [group(comp), seqstrict, non-assoc]
-                    | Expr "<"  Expr [group(comp), strict, non-assoc]
-                    > Expr "&&" Expr [group(bool), seqstrict, left]
-                    > Expr "||" Expr [group(bool), seqstrict, left]
+                      Expr "+" Expr  [seqstrict]
+                    | Expr "-" Expr  [strict]
+                    > Expr "==" Expr [seqstrict, non-assoc]
+                    | Expr "!=" Expr [seqstrict, non-assoc]
+                    | Expr ">=" Expr [seqstrict, non-assoc]
+                    | Expr ">"  Expr [seqstrict, non-assoc]
+                    | Expr "<=" Expr [seqstrict, non-assoc]
+                    | Expr "<"  Expr [strict, non-assoc]
+                    > Expr "&&" Expr [seqstrict, left]
+                    > Expr "||" Expr [seqstrict, left]
 endmodule
 
 
