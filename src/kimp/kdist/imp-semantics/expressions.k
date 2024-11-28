@@ -26,8 +26,10 @@ module EXPRESSIONS-SYNTAX
                     > left:
                       Expr "==" Expr [seqstrict]
                     | Expr "!=" Expr [seqstrict]
-                    > Expr "&&" Expr [seqstrict, left]
-                    > Expr "||" Expr [seqstrict, left]
+                    > left:
+                      Expr "&&" Expr [seqstrict]
+                    > left:
+                      Expr "||" Expr [seqstrict]
 endmodule
 
 
