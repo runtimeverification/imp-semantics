@@ -38,25 +38,24 @@ module EXPRESSIONS-RULES
   imports INT
   imports BOOL
 
-  rule   - X => 0 -Int X
+  rule - X => 0 -Int X
+  rule ! B => notBool B
 
   rule X + Y => X +Int Y
   rule X - Y => X -Int Y
   rule X * Y => X *Int Y
   rule X / Y => X /Int Y
 
-  rule B1 == B2 => B1 ==Bool B2
-  rule I1 == I2 => I1 ==Int I2
-
-  rule B1 != B2 => B1 =/=Bool B2
-  rule I1 != I2 => I1 =/=Int  I2
-
   rule I1 >= I2 => I1 >=Int I2
   rule I1 >  I2 => I1 >Int  I2
   rule I1 <= I2 => I1 <=Int I2
   rule I1 <  I2 => I1 <Int  I2
 
-  rule ! B => notBool B
+  rule B1 == B2 => B1 ==Bool B2
+  rule I1 == I2 => I1 ==Int I2
+
+  rule B1 != B2 => B1 =/=Bool B2
+  rule I1 != I2 => I1 =/=Int  I2
 
   rule true  && B => B
   rule false && _ => false
