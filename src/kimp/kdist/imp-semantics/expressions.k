@@ -17,12 +17,12 @@ module EXPRESSIONS-SYNTAX
                     | Expr "/" Expr  [seqstrict]
                     > left:
                       Expr "+" Expr  [seqstrict]
-                    | Expr "-" Expr  [strict]
+                    | Expr "-" Expr  [seqstrict]
                     > left:
                       Expr ">=" Expr [seqstrict]
                     | Expr ">"  Expr [seqstrict]
                     | Expr "<=" Expr [seqstrict]
-                    | Expr "<"  Expr [strict]
+                    | Expr "<"  Expr [seqstrict]
                     > left:
                       Expr "==" Expr [seqstrict]
                     | Expr "!=" Expr [seqstrict]
