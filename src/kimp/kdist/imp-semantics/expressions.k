@@ -2,34 +2,34 @@ module EXPRESSIONS-SYNTAX
   imports UNSIGNED-INT-SYNTAX
   imports BOOL-SYNTAX
 
-  syntax Value    ::= Int
-                    | Bool
+  syntax Value   ::= Int
+                   | Bool
 
-  syntax KResult  ::= Value
+  syntax KResult ::= Value
 
-  syntax Expr     ::= Value
-                    | "(" Expr ")"   [bracket, format(%1%2%3)]
+  syntax Expr    ::= Value
+                   | "(" Expr ")"   [bracket, format(%1%2%3)]
 
-  syntax Expr     ::= "-" Expr       [strict, format(%1%2)]
-                    | "!" Expr       [strict, format(%1%2)]
-                    > left:
-                      Expr "*" Expr  [seqstrict]
-                    | Expr "/" Expr  [seqstrict]
-                    > left:
-                      Expr "+" Expr  [seqstrict]
-                    | Expr "-" Expr  [seqstrict]
-                    > left:
-                      Expr ">=" Expr [seqstrict]
-                    | Expr ">"  Expr [seqstrict]
-                    | Expr "<=" Expr [seqstrict]
-                    | Expr "<"  Expr [seqstrict]
-                    > left:
-                      Expr "==" Expr [seqstrict]
-                    | Expr "!=" Expr [seqstrict]
-                    > left:
-                      Expr "&&" Expr [strict(1)]
-                    > left:
-                      Expr "||" Expr [strict(1)]
+  syntax Expr    ::= "-" Expr       [strict, format(%1%2)]
+                   | "!" Expr       [strict, format(%1%2)]
+                   > left:
+                     Expr "*" Expr  [seqstrict]
+                   | Expr "/" Expr  [seqstrict]
+                   > left:
+                     Expr "+" Expr  [seqstrict]
+                   | Expr "-" Expr  [seqstrict]
+                   > left:
+                     Expr ">=" Expr [seqstrict]
+                   | Expr ">"  Expr [seqstrict]
+                   | Expr "<=" Expr [seqstrict]
+                   | Expr "<"  Expr [seqstrict]
+                   > left:
+                     Expr "==" Expr [seqstrict]
+                   | Expr "!=" Expr [seqstrict]
+                   > left:
+                     Expr "&&" Expr [strict(1)]
+                   > left:
+                     Expr "||" Expr [strict(1)]
 endmodule
 
 
