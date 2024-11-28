@@ -27,9 +27,9 @@ module EXPRESSIONS-SYNTAX
                       Expr "==" Expr [seqstrict]
                     | Expr "!=" Expr [seqstrict]
                     > left:
-                      Expr "&&" Expr [seqstrict]
+                      Expr "&&" Expr [strict(1)]
                     > left:
-                      Expr "||" Expr [seqstrict]
+                      Expr "||" Expr [strict(1)]
 endmodule
 
 
@@ -57,8 +57,12 @@ module EXPRESSIONS-RULES
   rule I1 <  I2 => I1 <Int  I2
 
   rule ! B => notBool B
-  rule B1 && B2 => B1 andBool B2
-  rule B1 || B2 => B1 orBool B2
+
+  rule true  && B => B
+  rule false && _ => false
+
+  rule true  || _ => true
+  rule false || B => B
 endmodule
 
 
