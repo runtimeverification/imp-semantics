@@ -1,4 +1,4 @@
-module EXPRESSIONS-SYNTAX
+module EXPR-SYNTAX
   imports UNSIGNED-INT-SYNTAX
   imports BOOL-SYNTAX
 
@@ -33,8 +33,8 @@ module EXPRESSIONS-SYNTAX
 endmodule
 
 
-module EXPRESSIONS-RULES
-  imports EXPRESSIONS-SYNTAX
+module EXPR-RULES
+  imports EXPR-SYNTAX
   imports INT
   imports BOOL
 
@@ -65,8 +65,8 @@ module EXPRESSIONS-RULES
 endmodule
 
 
-module EXPRESSIONS
-    imports EXPRESSIONS-RULES
+module EXPR
+    imports EXPR-RULES
 
     configuration <k> $PGM:Expr </k>
 endmodule

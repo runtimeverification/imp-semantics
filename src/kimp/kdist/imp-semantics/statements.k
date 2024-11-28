@@ -1,8 +1,8 @@
-requires "expressions.k"
+requires "expr.k"
 
 
 module STATEMENTS-SYNTAX
-  imports EXPRESSIONS-SYNTAX
+  imports EXPR-SYNTAX
   imports ID-SYNTAX
 
   syntax Expr ::= Id
@@ -44,7 +44,7 @@ endmodule
 
 
 module STATEMENTS
-  imports EXPRESSIONS-RULES
+  imports EXPR-RULES
   imports STATEMENTS-RULES
 
   configuration
