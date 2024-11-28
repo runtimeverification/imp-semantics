@@ -1,5 +1,6 @@
 requires "expressions.k"
 
+
 module STATEMENTS-SYNTAX
   imports EXPRESSIONS-SYNTAX
   imports ID-SYNTAX
@@ -16,6 +17,7 @@ module STATEMENTS-SYNTAX
                 > right:
                   Stmt Stmt                          [format(%1%n%2)]
 endmodule
+
 
 module STATEMENTS-RULES
   imports STATEMENTS-SYNTAX
@@ -38,8 +40,8 @@ module STATEMENTS-RULES
   rule [done]: {} => .K
 
   rule [step]: S1:Stmt S2:Stmt => S1 ~> S2
-
 endmodule
+
 
 module STATEMENTS
   imports EXPRESSIONS

@@ -8,6 +8,7 @@ module VALUE-SYNTAX
   syntax KResult ::= Value
 endmodule
 
+
 module EXPRESSIONS-SYNTAX
   imports VALUE-SYNTAX
 
@@ -34,8 +35,8 @@ module EXPRESSIONS-SYNTAX
                     > Expr "||" Expr [group(bool), seqstrict, left]
 
   syntax priority unary > mul > add > comp > bool
-
 endmodule
+
 
 module EXPRESSIONS
   imports EXPRESSIONS-SYNTAX // also imports VALUE-SYNTAX (transitive)
