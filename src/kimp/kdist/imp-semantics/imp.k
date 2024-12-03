@@ -1,21 +1,14 @@
-requires "expr.k"
+requires "calc.k"
 
 
 module IMP-SYNTAX
-  imports EXPR-SYNTAX
-  imports ID-SYNTAX
+  imports CALC-SYNTAX
 
-  syntax Expr ::= Id
-
-  syntax Stmt ::= Id "=" Expr ";"                    [strict(2), format(%1 %2 %3%4)]
-                | "if" "(" Expr ")" Stmt "else" Stmt [strict(1), avoid, format(%1 %2%3%4% %5 %6 %7)] // dangling else
-                | "if" "(" Expr ")" Stmt             [format(%1 %2%3%4 %5)]
-                | "while" "(" Expr ")" Stmt          [format(%1 %2%3%4 %5)] // not strict!
-                // blocks of statements
-                | "{" Stmt "}"                       [format(%1%i%n%2%d%n%3)]
-                | "{" "}"                            [format(%1%2)]
-                > right:
-                  Stmt Stmt                          [format(%1%n%2)]
+  syntax Stmt ::= "if" "(" Expr ")" Stmt "else" Stmt [group(stmt), strict(1), avoid, format(%1 %2%3%4% %5 %6 %7)] // dangling else
+                | "if" "(" Expr ")" Stmt             [group(stmt), format(%1 %2%3%4 %5)]
+                | "while" "(" Expr ")" Stmt          [group(stmt), format(%1 %2%3%4 %5)] // not strict!
+                | "{" Stmt "}"                       [group(stmt), format(%1%i%n%2%d%n%3)]
+                | "{" "}"                            [group(stmt), format(%1%2)]
 endmodule
 
 
@@ -38,24 +31,10 @@ module IMP-RULES
   rule [block]: { E } => E ~> {}
 
   rule [done]: {} => .K
-
-  rule [step]: S1:Stmt S2:Stmt => S1 ~> S2
 endmodule
 
 
 module IMP
-  imports EXPR-RULES
   imports IMP-RULES
-
-  configuration
-    <k   color="green">  $PGM:Stmt </k>
-    <env color="yellow"> $ENV:Map  </env>
-
-  rule [var]:
-    <k> X:Id => V ...</k>
-    <env> X |-> V ...</env>
-
-  rule [assign]:
-    <k> X = V:Value ; => .K ...</k>
-    <env> E => E [ X <- V ] </env>
+  imports CALC
 endmodule
