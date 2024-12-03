@@ -272,8 +272,8 @@ class KImp:
             prover = APRProver(
                 kcfg_explore=kcfg_explore,
                 execute_depth=max_depth,
-                cut_point_rules=['IMP-RULES.while'],
-                terminal_rules=['IMP-RULES.done'],
+                cut_point_rules=['IMP.while'],
+                terminal_rules=['IMP.done'],
             )
             prover.advance_proof(proof, max_iterations=max_iterations)
 

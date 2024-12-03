@@ -12,29 +12,27 @@ module IMP-SYNTAX
 endmodule
 
 
-module IMP-RULES
+module IMP
   imports IMP-SYNTAX
+  imports CALC
 
-  rule [if-true]:  if ( true  ) E1 else _  => E1
-  rule [if-false]: if ( false ) _  else E2 => E2
+  rule [if-true]:  <k> if ( true  ) S1 else _  => S1 ... </k>
+  rule [if-false]: <k> if ( false ) _  else S2 => S2 ... </k>
 
-  rule [if-else]: if ( C ) E => if ( C ) E else {}
+  rule [if-else]: <k> if ( C ) S => if ( C ) S else {} ... </k>
 
   rule [while]:
-    while ( C ) E
-    =>
-    if ( C ) {
-      E
-      while ( C ) E
-    }
+    <k>
+      while ( C ) S
+      =>
+      if ( C ) {
+        S
+        while ( C ) S
+      }
+      ...
+    </k>
 
-  rule [block]: { E } => E ~> {}
+  rule [block]: <k> { S } => S ~> { } ... </k>
 
-  rule [done]: {} => .K
-endmodule
-
-
-module IMP
-  imports IMP-RULES
-  imports CALC
+  rule [done]: <k> { } => .K ... </k>
 endmodule

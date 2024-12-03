@@ -15,26 +15,21 @@ module CALC-SYNTAX
 endmodule
 
 
-module CALC-RULES
-  imports CALC-SYNTAX
-
-  rule [step]: S1:Stmt S2:Stmt => S1 ~> S2
-endmodule
-
-
 module CALC
+  imports CALC-SYNTAX
   imports EXPR-RULES
-  imports CALC-RULES
 
   configuration
     <k   color="green">  $PGM:Stmt </k>
     <env color="yellow"> $ENV:Map  </env>
 
+  rule [step]: <k> S1:Stmt S2:Stmt => S1 ~> S2 ... </k>
+
   rule [var]:
-    <k> X:Id => V ...</k>
-    <env> X |-> V ...</env>
+    <k> X:Id => V ... </k>
+    <env> X |-> V ... </env>
 
   rule [assign]:
-    <k> X = V:Value ; => .K ...</k>
+    <k> X = V:Value ; => .K ... </k>
     <env> E => E [ X <- V ] </env>
 endmodule
