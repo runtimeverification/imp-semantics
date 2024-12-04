@@ -1,4 +1,5 @@
-requires "statements.k"
+requires "imp.k"
+
 
 module IMP-VERIFICATION-SYNTAX
     imports ID-SYNTAX
@@ -9,7 +10,7 @@ endmodule
 
 module IMP-VERIFICATION
     imports IMP-VERIFICATION-SYNTAX
-    imports STATEMENTS
+    imports IMP
 
     // inequality sign normalization
     rule          A  >Int B  => B  <Int A [simplification]
