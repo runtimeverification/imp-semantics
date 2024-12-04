@@ -39,7 +39,9 @@ jobs:
         uses: ./.github/actions/with-docker
         with:
           container-name: ${CONTAINER}
-      - name: 'Build and run integration tests'
+      - name: 'Build K definitions'
+        run: docker exec -u user ${CONTAINER} make kdist
+      - name: 'Run integration tests'
         run: docker exec -u user ${CONTAINER} make cov-integration
       - name: 'Tear down Docker container'
         if: always()

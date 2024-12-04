@@ -182,15 +182,20 @@ class KImp:
         return llvm_interpret(definition_dir=self.dist.llvm_dir, pattern=pattern, depth=depth)
 
     def pattern(self, *, pgm: str, env: Mapping[str, int]) -> Pattern:
-        from pyk.kore.prelude import ID, INT, SORT_K_ITEM, inj, map_pattern, top_cell_initializer
+        from pyk.kore.prelude import BOOL, ID, INT, SORT_K_ITEM, bool_dv, inj, int_dv, map_pattern, top_cell_initializer
         from pyk.kore.syntax import DV, SortApp, String
+
+        def inj_dv(val: int) -> Pattern:
+            if isinstance(val, bool):
+                return inj(BOOL, SORT_K_ITEM, bool_dv(val))
+            return inj(INT, SORT_K_ITEM, int_dv(val))
 
         pgm_pattern = self.parse(pgm)
         env_pattern = map_pattern(
             *(
                 (
                     inj(ID, SORT_K_ITEM, DV(ID, String(var))),
-                    inj(INT, SORT_K_ITEM, DV(INT, String(str(val)))),
+                    inj_dv(val),
                 )
                 for var, val in env.items()
             )
@@ -203,19 +208,60 @@ class KImp:
         )
 
     def parse(self, pgm: str) -> Pattern:
+        from subprocess import CalledProcessError
+
         from pyk.kore.parser import KoreParser
         from pyk.utils import run_process_2
 
         parser = self.dist.llvm_dir / 'parser_PGM'
         args = [str(parser), '/dev/stdin']
 
-        kore_text = run_process_2(args, input=pgm).stdout
+        try:
+            kore_text = run_process_2(args, input=pgm).stdout
+        except CalledProcessError as err:
+            raise ValueError(err.stderr) from err
+
         return KoreParser(kore_text).pattern()
 
     def pretty(self, pattern: Pattern, color: bool | None = None) -> str:
         from pyk.kore.tools import kore_print
 
         return kore_print(pattern, definition_dir=self.dist.llvm_dir, color=bool(color))
+
+    def env(self, pattern: Pattern) -> dict[str, int]:
+        import pyk.kore.match as km
+        from pyk.kore.prelude import BOOL, INT
+        from pyk.utils import case, chain
+
+        extract = (
+            chain
+            >> km.app("Lbl'-LT-'generatedTop'-GT-'")
+            >> km.arg("Lbl'-LT-'env'-GT-'")
+            >> km.arg(0)
+            >> km.kore_map_of(
+                key=chain >> km.inj >> km.kore_id,
+                value=chain
+                >> km.match_inj
+                >> case(
+                    (
+                        (
+                            lambda inj: inj.sorts[0] == BOOL,
+                            chain >> km.arg(0) >> km.kore_bool,
+                        ),
+                        (
+                            lambda inj: inj.sorts[0] == INT,
+                            chain >> km.arg(0) >> km.kore_int,
+                        ),
+                    )
+                ),
+            )
+        )
+
+        try:
+            return dict(extract(pattern))
+        except Exception as err:
+            pretty_pattern = self.pretty(pattern)
+            raise ValueError(f'Cannot extract environment from pattern:\n{pretty_pattern}') from err
 
     def debug(self, pattern: Pattern) -> Callable[[int | None], None]:
         """Return a closure that enables step-by-step debugging in a REPL.
@@ -227,12 +273,12 @@ class KImp:
             step()            # Run a single step
             step(1)           # Run a single step
             step(0)           # Just print the current configuration
-            step(bound=None)  # Run to completion
+            step(depth=None)  # Run to completion
         """
 
-        def step(bound: int | None = 1) -> None:
+        def step(depth: int | None = 1) -> None:
             nonlocal pattern
-            pattern = self.run(pattern, depth=bound)
+            pattern = self.run(pattern, depth=depth)
             print(self.pretty(pattern, color=True))
 
         return step
