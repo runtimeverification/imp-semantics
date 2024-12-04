@@ -42,10 +42,19 @@ class KompileTarget(Target):
 
 __TARGETS__: Final = {
     'source': SourceTarget(),
+    'expr': KompileTarget(
+        lambda src_dir: {
+            'backend': PykBackend.LLVM,
+            'main_file': src_dir / 'imp-semantics/expr.k',
+            'warnings_to_errors': True,
+            'gen_glr_bison_parser': True,
+            'opt_level': 3,
+        },
+    ),
     'llvm': KompileTarget(
         lambda src_dir: {
             'backend': PykBackend.LLVM,
-            'main_file': src_dir / 'imp-semantics/statements.k',
+            'main_file': src_dir / 'imp-semantics/imp.k',
             'warnings_to_errors': True,
             'gen_glr_bison_parser': True,
             'opt_level': 3,
@@ -54,7 +63,7 @@ __TARGETS__: Final = {
     'llvm-lib': KompileTarget(
         lambda src_dir: {
             'backend': PykBackend.LLVM,
-            'main_file': src_dir / 'imp-semantics/statements.k',
+            'main_file': src_dir / 'imp-semantics/imp.k',
             'llvm_kompile_type': LLVMKompileType.C,
             'warnings_to_errors': True,
             'opt_level': 3,

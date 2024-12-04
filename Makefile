@@ -52,7 +52,7 @@ kdist: kdist-build
 KDIST_ARGS :=
 
 kdist-build: poetry-install have-k
-	$(POETRY_RUN) kdist --verbose build -j3 $(KDIST_ARGS)
+	$(POETRY_RUN) kdist --verbose build -j4 $(KDIST_ARGS)
 
 kdist-clean: poetry-install
 	$(POETRY_RUN) kdist clean
