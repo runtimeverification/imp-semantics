@@ -374,7 +374,7 @@ class KImp:
         claim_id: str,
     ) -> None:
         proof = APRProof.read_proof_data(proof_dir=self.proof_dir, id=f'{spec_module}.{claim_id}')
-        proof_show = APRProofShow(self.kprove, node_printer=ImpNodePrinter(kimp=self))
+        proof_show = APRProofShow(self.definition, node_printer=ImpNodePrinter(kimp=self))
         res_lines = proof_show.show(
             proof,
         )
@@ -385,7 +385,9 @@ class ImpNodePrinter(NodePrinter):
     kimp: KImp
 
     def __init__(self, kimp: KImp):
-        NodePrinter.__init__(self, kimp.kprove)
+        from pyk.cterm.show import CTermShow
+
+        super().__init__(cterm_show=CTermShow(kimp.format))
         self.kimp = kimp
 
     def print_node(self, kcfg: KCFG, node: KCFG.Node) -> list[str]:
