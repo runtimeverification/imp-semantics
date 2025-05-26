@@ -18,7 +18,7 @@ imp-semantics = "kimp.kdist.plugin"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-kframework = "7.1.259"
+kframework = "7.1.261"
 
 [tool.poetry.group.dev.dependencies]
 autoflake = "*"
