@@ -82,21 +82,20 @@ After installing the project, you can access the `kimp` CLI:
 
 ### For Developers
 
-Install `poetry` following the instruction [here](https://python-poetry.org/docs/#installation).
-Run `poetry install` to transparently install the package into a virtual environment managed by `poetry`.
+Install `uv` following the instruction [here](https://docs.astral.sh/uv/getting-started/installation/).
 
 Use `make` to run common tasks (see the [Makefile](Makefile) for a complete list of available targets).
 
-* `make`: Check code style and run unit tests (also runs `poetry install`)
+* `make`: Check code style and run unit tests
 * `make kdist`: Kompile K definitions
 * `make check`: Check code style
-* `make test-unit`: Run unit tests
 * `make format`: Format code
+* `make test-unit`: Run unit tests
+* `make test-integration`: Run integration tests
 
 Command `make kdist` needs to be repeated each time the `.k` files under `kimp/src/kimp/kdist/imp-semantics` change,
 
-Use `poetry run kimp` to execute the `kimp` CLI.
-To avoid prefixing every command with `poetry run`, activate the virtual environment with `poetry shell`.
+Use `uv run kimp` to execute the `kimp` CLI.
 
 
 ## Usage

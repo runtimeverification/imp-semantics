@@ -22,14 +22,14 @@ jobs:
         run: |
           git config user.name devops
           git config user.email devops@runtimeverification.com
-      - name: 'Install Poetry'
-        uses: Gr1N/setup-poetry@v9
+      - name: 'Install uv'
+        uses: astral-sh/setup-uv@v6
       - name: 'Update kframework release tag'
         run: |
           K_VERSION=$(cat deps/k_release)
-          sed -i 's!kframework = "[0-9\.]*"!kframework = "'${K_VERSION}'"!' pyproject.toml
-          poetry update
-          git add pyproject.toml poetry.lock
-          git commit -m "Sync Poetry files: kframework ${K_VERSION}" || true
+          sed -i 's!    "kframework==[0-9\.]*"!    "kframework=='${K_VERSION}'"!' pyproject.toml
+          uv lock --upgrade
+          git add pyproject.toml uv.lock
+          git commit -m "Sync uv files: kframework ${K_VERSION}" || true
       - name: 'Push updates'
         run: git push
