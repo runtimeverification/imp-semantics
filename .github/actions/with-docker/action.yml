@@ -17,10 +17,12 @@ runs:
       TAG=runtimeverificationinc/${CONTAINER_NAME}
       DOCKERFILE=${{ github.action_path }}/Dockerfile
       K_VERSION=$(cat deps/k_release)
+      UV2NIX_REVISION=$(cat deps/uv2nix)
 
-      docker build .                       \
-        --file ${DOCKERFILE}               \
-        --build-arg K_VERSION=${K_VERSION} \
+      docker build .                                   \
+        --file ${DOCKERFILE}                           \
+        --build-arg K_VERSION=${K_VERSION}             \
+        --build-arg UV2NIX_REVISION=${UV2NIX_REVISION} \
         --tag ${TAG}
 
   - name: 'Run Docker container'
