@@ -18,13 +18,15 @@ build:
 
 # Docker
 
-K_VERSION ?= $(shell cat deps/k_release)
+K_VERSION  ?= $(shell cat deps/k_release)
+UV_VERSION ?= $(shell cat deps/uv_release)
 
 .PHONY: docker
 docker: TAG=runtimeverificationinc/imp-semantics:$(K_VERSION)
 docker: package/Dockerfile
 	docker build . \
-		--build-arg K_VERSION=$(K_VERSION) \
+		--build-arg K_VERSION=$(K_VERSION)   \
+		--build-arg UV_VERSION=$(UV_VERSION) \
 		--file $< \
 		--tag $(TAG)
 

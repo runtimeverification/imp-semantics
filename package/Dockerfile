@@ -28,7 +28,8 @@ ENV K_VERSION=${K_VERSION} \
     force_color_prompt=yes
 
 # install uv
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ARG UV_VERSION
+RUN curl -LsSf https://astral.sh/uv/$UV_VERSION/install.sh | sh && uv --version
 
 # install kimp
 COPY --chown=k-user:k-group . /home/k-user/kimp-src
