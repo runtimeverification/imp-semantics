@@ -105,4 +105,4 @@ jobs:
           KIMP_BIN=$(nix build .#kimp --print-build-logs --json | $JQ -r '.[].outputs | to_entries[].value')/bin
           echo $KIMP_BIN >> $GITHUB_PATH
       - name: 'Run smoke test'
-        run: cd package && ./smoke-test.sh
+        run: ./package/smoke-test.sh
