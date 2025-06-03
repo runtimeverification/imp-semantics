@@ -18,6 +18,7 @@ email = "contact@runtimeverification.com"
 
 [project.scripts]
 kimp = "kimp.__main__:main"
+kimp-kdist = "pyk.kdist.__main__:main"
 
 [project.entry-points.kdist]
 imp-semantics = "kimp.kdist.plugin"
