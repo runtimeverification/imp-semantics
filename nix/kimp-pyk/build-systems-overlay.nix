@@ -12,6 +12,7 @@ let
   buildSystemOverrides = {
     # add dependencies here, e.g.:
     # pyperclip.setuptools = [ ];
+    kframework.poetry-core = [ ];
   };
 in
 mapAttrs (
