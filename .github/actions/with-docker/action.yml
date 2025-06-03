@@ -22,7 +22,7 @@ runs:
       docker build .                                   \
         --file ${DOCKERFILE}                           \
         --build-arg K_VERSION=${K_VERSION}             \
-        --build-arg UV_VERSION=${UV_VERSION} \
+        --build-arg UV_VERSION=${UV_VERSION}           \
         --tag ${TAG}
 
   - name: 'Run Docker container'
