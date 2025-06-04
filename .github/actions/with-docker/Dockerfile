@@ -19,4 +19,5 @@ USER $USER:$GROUP
 ENV PATH=/home/$USER/.local/bin:$PATH
 
 ARG UV_VERSION
-RUN curl -LsSf https://astral.sh/uv/$UV_VERSION/install.sh | sh && uv --version
+RUN    curl -LsSf https://astral.sh/uv/$UV_VERSION/install.sh | sh \
+    && uv --version

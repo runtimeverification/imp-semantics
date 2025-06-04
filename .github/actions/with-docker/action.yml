@@ -19,10 +19,10 @@ runs:
       K_VERSION=$(cat deps/k_release)
       UV_VERSION=$(cat deps/uv_release)
 
-      docker build .                                   \
-        --file ${DOCKERFILE}                           \
-        --build-arg K_VERSION=${K_VERSION}             \
-        --build-arg UV_VERSION=${UV_VERSION}           \
+      docker build .                         \
+        --file ${DOCKERFILE}                 \
+        --build-arg K_VERSION=${K_VERSION}   \
+        --build-arg UV_VERSION=${UV_VERSION} \
         --tag ${TAG}
 
   - name: 'Run Docker container'

@@ -29,7 +29,8 @@ ENV K_VERSION=${K_VERSION} \
 
 # install uv
 ARG UV_VERSION
-RUN curl -LsSf https://astral.sh/uv/$UV_VERSION/install.sh | sh && uv --version
+RUN curl -LsSf https://astral.sh/uv/$UV_VERSION/install.sh | sh && \
+    uv --version
 
 # install kimp
 COPY --chown=k-user:k-group . /home/k-user/kimp-src
