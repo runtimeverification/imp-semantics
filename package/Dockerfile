@@ -27,12 +27,14 @@ ENV K_VERSION=${K_VERSION} \
     PATH=/home/k-user/.local/bin:$PATH \
     force_color_prompt=yes
 
-# install poetry
-RUN curl -sSL https://install.python-poetry.org | python3 -
+# install uv
+ARG UV_VERSION
+RUN curl -LsSf https://astral.sh/uv/$UV_VERSION/install.sh | sh && \
+    uv --version
 
 # install kimp
 COPY --chown=k-user:k-group . /home/k-user/kimp-src
-RUN poetry -C /home/k-user/kimp-src build && \
+RUN uv --project /home/k-user/kimp-src build && \
     pip install /home/k-user/kimp-src/dist/*.whl && \
     rm -r /home/k-user/kimp-src && \
     kdist --verbose build -j3
