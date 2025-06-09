@@ -92,28 +92,23 @@
         "flake-utils": "flake-utils_2",
         "nixpkgs": [
           "k-framework",
-          "llvm-backend",
           "nixpkgs"
         ],
-        "rv-utils": [
-          "k-framework",
-          "llvm-backend",
-          "rv-utils"
-        ],
+        "rv-utils": "rv-utils",
         "some-cabal-hashes-lib": "some-cabal-hashes-lib",
         "z3": "z3"
       },
       "locked": {
-        "lastModified": 1745536412,
-        "narHash": "sha256-fuaZHj8fTUPsFIgeCtcrXcPIblRvY3yegz4cIwxEix8=",
+        "lastModified": 1748270347,
+        "narHash": "sha256-LKKx0a0Oy0CmtSi50QGP0Q0nkxblf2HEPEBDtqR4gZE=",
         "owner": "runtimeverification",
         "repo": "haskell-backend",
-        "rev": "6bfa1f78a7f14542328485252f0df5449a57c1bc",
+        "rev": "646a001a5962a5307942c4db2dae9ed63daaad42",
         "type": "github"
       },
       "original": {
         "owner": "runtimeverification",
-        "ref": "v0.1.124",
+        "ref": "v0.1.126",
         "repo": "haskell-backend",
         "type": "github"
       }
@@ -148,23 +143,19 @@
           "nixpkgs"
         ],
         "poetry2nix": "poetry2nix",
-        "rv-utils": [
-          "k-framework",
-          "llvm-backend",
-          "rv-utils"
-        ]
+        "rv-nix-tools": "rv-nix-tools"
       },
       "locked": {
-        "lastModified": 1747919554,
-        "narHash": "sha256-vKBUzxrhaGFDboesd7C0yyqSjKF86YCWEx8RWjVzDV8=",
+        "lastModified": 1749449002,
+        "narHash": "sha256-CSGgoeRJktOURk2DhS/nHMFGJHFioxSUpNV1lu9njR4=",
         "owner": "runtimeverification",
         "repo": "k",
-        "rev": "7617b35eba8154580796eb46d2ed9a0de515bda3",
+        "rev": "145700ec3f123f85296ca2ab6e30471451b9da2b",
         "type": "github"
       },
       "original": {
         "owner": "runtimeverification",
-        "ref": "v7.1.259",
+        "ref": "v7.1.267",
         "repo": "k",
         "type": "github"
       }
@@ -176,26 +167,24 @@
         "immer-src": "immer-src",
         "nixpkgs": [
           "k-framework",
-          "llvm-backend",
-          "rv-utils",
           "nixpkgs"
         ],
         "pybind11-src": "pybind11-src",
         "rapidjson-src": "rapidjson-src",
-        "rv-utils": "rv-utils",
+        "rv-utils": "rv-utils_2",
         "utils": "utils"
       },
       "locked": {
-        "lastModified": 1747171992,
-        "narHash": "sha256-UQMgj0XGboF1klc2EvQxLDEhsuyDYBJRSnwDebIa7+0=",
+        "lastModified": 1749248627,
+        "narHash": "sha256-1Y9yIqnH6yCOuB2gP75P/3OhcbItTihtaaCdui2cvFo=",
         "owner": "runtimeverification",
         "repo": "llvm-backend",
-        "rev": "489cfdbfa5478167ab23877f33c15e059757915f",
+        "rev": "74bf6385cea9835c7f59628e028b45d635b59c74",
         "type": "github"
       },
       "original": {
         "owner": "runtimeverification",
-        "ref": "v0.1.132",
+        "ref": "v0.1.133",
         "repo": "llvm-backend",
         "type": "github"
       }
@@ -256,6 +245,38 @@
     },
     "nixpkgs_3": {
       "locked": {
+        "lastModified": 1716457947,
+        "narHash": "sha256-Y+exebcqeprnhEpoPJrEUZmNeO60qeOxkVHhqG/OEwQ=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "69493a13eaea0dc4682fd07e8a084f17813dbeeb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "69493a13eaea0dc4682fd07e8a084f17813dbeeb",
+        "type": "github"
+      }
+    },
+    "nixpkgs_4": {
+      "locked": {
+        "lastModified": 1716457947,
+        "narHash": "sha256-Y+exebcqeprnhEpoPJrEUZmNeO60qeOxkVHhqG/OEwQ=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "69493a13eaea0dc4682fd07e8a084f17813dbeeb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "69493a13eaea0dc4682fd07e8a084f17813dbeeb",
+        "type": "github"
+      }
+    },
+    "nixpkgs_5": {
+      "locked": {
         "lastModified": 1744306051,
         "narHash": "sha256-jWwqkmi8cplBu4CXUb4zdfpqKp3UJYVAs/b5m8M75sg=",
         "owner": "runtimeverification",
@@ -276,7 +297,6 @@
         "nix-github-actions": "nix-github-actions",
         "nixpkgs": [
           "k-framework",
-          "llvm-backend",
           "nixpkgs"
         ],
         "systems": "systems_5",
@@ -393,13 +413,32 @@
           "uv2nix",
           "pyproject-nix"
         ],
-        "rv-nix-tools": "rv-nix-tools",
+        "rv-nix-tools": "rv-nix-tools_2",
         "uv2nix": "uv2nix"
       }
     },
     "rv-nix-tools": {
       "inputs": {
-        "nixpkgs": "nixpkgs_2"
+        "nixpkgs": "nixpkgs_3"
+      },
+      "locked": {
+        "lastModified": 1726497185,
+        "narHash": "sha256-iN+5eLmDm/rLuIZezS5ZqiW1BtBpwrrM9CPPP7Z5Tog=",
+        "owner": "runtimeverification",
+        "repo": "rv-nix-tools",
+        "rev": "854d4f05ea78547d46e807b414faad64cea10ae4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "runtimeverification",
+        "repo": "rv-nix-tools",
+        "rev": "854d4f05ea78547d46e807b414faad64cea10ae4",
+        "type": "github"
+      }
+    },
+    "rv-nix-tools_2": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_4"
       },
       "locked": {
         "lastModified": 1726497185,
@@ -419,6 +458,24 @@
     "rv-utils": {
       "inputs": {
         "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1716459074,
+        "narHash": "sha256-IpahO+EkWdGl9QP7B2YXfJWpSfghjxgpz4ab47nRJY4=",
+        "owner": "runtimeverification",
+        "repo": "rv-nix-tools",
+        "rev": "a65058865cda201de504f5546271b8e997a0be9c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "runtimeverification",
+        "repo": "rv-nix-tools",
+        "type": "github"
+      }
+    },
+    "rv-utils_2": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_2"
       },
       "locked": {
         "lastModified": 1716459074,
@@ -566,7 +623,7 @@
     },
     "uv2nix": {
       "inputs": {
-        "nixpkgs": "nixpkgs_3",
+        "nixpkgs": "nixpkgs_5",
         "pyproject-nix": "pyproject-nix"
       },
       "locked": {
