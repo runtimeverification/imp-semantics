@@ -9,7 +9,7 @@ description = ""
 readme = "README.md"
 requires-python = "~=3.10"
 dependencies = [
-    "kframework==7.1.277",
+    "kframework==7.1.278",
 ]
 
 [[project.authors]]
