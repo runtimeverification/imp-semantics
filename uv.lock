@@ -503,7 +503,7 @@ wheels = [
 
 [[package]]
 name = "kframework"
-version = "7.1.282"
+version = "7.1.286"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "coloredlogs" },
@@ -520,9 +520,9 @@ dependencies = [
     { name = "tomli" },
     { name = "xdg-base-dirs" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e9/79/62c2244b23b4336dacdbcbaacaa67ae78e1d54ad60fc5466d117cee70374/kframework-7.1.282.tar.gz", hash = "sha256:ceb4aec9e0a7491ca99a10d084db0e2e16602ebad2cad892563ab3d0abeccc23", size = 242922, upload-time = "2025-08-26T19:07:35.703Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c9/3c/3dae901a12ce9592d081dde923d01aa695ec841be0002566fe24afb4db97/kframework-7.1.286.tar.gz", hash = "sha256:765bfec5c17f2ca83fa31dec766bb352463a5891466007452ddc27863c3e4710", size = 242935, upload-time = "2025-09-13T03:45:10.057Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/14/2b/8520fb668ae7f222fe174318179ab6b22cbcf786c349690112c0e912c85d/kframework-7.1.282-py3-none-any.whl", hash = "sha256:08850f995fd02371dfadcf372460b67594e0872018547d86d00a2ba75458f377", size = 294118, upload-time = "2025-08-26T19:07:33.892Z" },
+    { url = "https://files.pythonhosted.org/packages/e8/ff/f0447faf2cfd47d274a61d2e79d63126f2c80f95f512580be4fbdab2c515/kframework-7.1.286-py3-none-any.whl", hash = "sha256:35489e1e7c90b1c49c894337b05d0413409c0fb9f6e2ee2a743a671f876ea6ab", size = 294119, upload-time = "2025-09-13T03:45:08.119Z" },
 ]
 
 [[package]]
@@ -553,7 +553,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "kframework", specifier = "==7.1.282" }]
+requires-dist = [{ name = "kframework", specifier = "==7.1.286" }]
 
 [package.metadata.requires-dev]
 dev = [
