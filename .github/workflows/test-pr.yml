@@ -96,19 +96,6 @@ jobs:
         uses: cachix/cachix-action@v16
         with:
           name: k-framework
-
-      # debugging
-      - name: 'Upload nix files for debugging purposes: flake.nix'
-        uses: actions/upload-artifact@v4
-        with:
-          name: nix flake
-          path: flake.nix
-      - name: 'Upload nix files for debugging purposes: flake.lock'
-        uses: actions/upload-artifact@v4
-        with:
-          name: nix lockfile
-          path: flake.lock
-
       - name: 'Build KIMP'
         env:
           NIX_PATH: 'nixpkgs=http://nixos.org/channels/nixos-22.05/nixexprs.tar.xz'
