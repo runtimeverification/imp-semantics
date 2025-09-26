@@ -75,7 +75,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: [normal, MacM1]  # MacM1 / normal are self-hosted
+        runner: [rvwork-m2-1, rvwork-m2-2]  # MacM1 / normal are self-hosted
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 60
     steps:
@@ -103,6 +103,10 @@ jobs:
         run: |
           set -euxo pipefail
           nix --version
+
+          # debugging
+          ls -l $(which nix)
+
           JQ=$(nix-build '<nixpkgs>' -A jq --no-link)/bin/jq
           KIMP_BIN=$(nix build .#kimp --print-build-logs --json | $JQ -r '.[].outputs | to_entries[].value')/bin
           echo $KIMP_BIN >> $GITHUB_PATH
