@@ -108,8 +108,7 @@ jobs:
           ls -l $(which nix)
 
           JQ=$(nix-build '<nixpkgs>' -A jq --no-link)/bin/jq
-          NIX="/nix/store/xwl1jdg0l702cv3wxqd7n0rcwz1g6axx-nix-2.31.2/bin/nix"
-          KIMP_BIN=$($NIX build .#kimp --print-build-logs --json | $JQ -r '.[].outputs | to_entries[].value')/bin
+          KIMP_BIN=$(nix build .#kimp --print-build-logs --json | $JQ -r '.[].outputs | to_entries[].value')/bin
           echo $KIMP_BIN >> $GITHUB_PATH
       - name: 'Run smoke test'
         run: ./package/smoke-test.sh
