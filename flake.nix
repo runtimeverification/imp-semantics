@@ -52,8 +52,14 @@
       };
       kimpOverlay = final: prev:
       let
+        kimp-pyk-pyproject = final.callPackage ./nix/kimp-pyk-pyproject {
+          inherit uv2nix;
+        };
         kimp-pyk = final.callPackage ./nix/kimp-pyk {
-          inherit pyproject-nix pyproject-build-systems uv2nix;
+          inherit pyproject-nix pyproject-build-systems kimp-pyk-pyproject;
+          pyproject-overlays = [
+            (k-framework.overlays.pyk-pyproject system)
+          ];
           python = final."python${pythonVer}";
         };
         kimp = final.callPackage ./nix/kimp {
@@ -61,7 +67,7 @@
           rev = self.rev or null;
         };
       in {
-        inherit kimp;
+        inherit kimp kimp-pyk kimp-pyk-pyproject;
       };
       pkgs = import nixpkgs {
         inherit system;
@@ -90,12 +96,19 @@
         '';
       };
       packages = rec {
-        inherit (pkgs) kimp uv;
+        inherit (pkgs) kimp uv kimp-pyk kimp-pyk-pyproject;
         default = kimp;
       };
     }) // {
-      overlays.default = final: prev: {
-        inherit (self.packages.${final.system}) kimp;
+      overlays = {
+        default = final: prev: {
+          inherit (self.packages.${final.system}) kimp;
+        };
+        # this pyproject-nix overlay allows for overriding the python packages that are otherwise locked in `uv.lock`
+        # by using this overlay in dependant nix flakes, you ensure that nix overrides also override the python package     
+        pyk-pyproject = system: final: prev: {
+          inherit (self.packages.${system}.kimp-pyk-pyproject.lockFileOverlay final prev) kimp-pyk;
+        };
       };
     };
 }
