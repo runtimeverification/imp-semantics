@@ -18,6 +18,7 @@ module IMP-SUM-SPEC
         $s |-> (S:Int => S +Int ((N +Int 1) *Int N /Int 2))
     </env>
   requires N >=Int 0
+  [circularity]
 
   claim [two-sum-spec]:
       <k>
@@ -41,5 +42,6 @@ module IMP-SUM-SPEC
     </env>
   requires N >=Int 0
    andBool M >=Int 0
+  [circularity]
 
 endmodule
