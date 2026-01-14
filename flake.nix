@@ -5,7 +5,7 @@
     nixpkgs.follows = "rv-nix-tools/nixpkgs";
 
     flake-utils.url = "github:numtide/flake-utils";
-    k-framework.url = "github:runtimeverification/k/v7.1.304";
+    k-framework.url = "github:runtimeverification/k/v7.1.310";
     k-framework.inputs.nixpkgs.follows = "nixpkgs";
     uv2nix.url = "github:pyproject-nix/uv2nix/9d357f0d2ce6f5f35ec7959d7e704452352eb4da";
     # uv2nix requires a newer version of nixpkgs
