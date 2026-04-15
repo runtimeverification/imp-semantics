@@ -73,7 +73,7 @@ class ImpSemantics(KCFGSemantics):
     def can_make_custom_step(self, c: CTerm) -> bool:
         return False
 
-    def custom_step(self, c: CTerm, cs: CTermSymbolic) -> KCFGExtendResult | None:
+    def custom_step(self, c: CTerm, cs: CTermSymbolic, node_id: int) -> KCFGExtendResult | None:
         return None
 
     def is_mergeable(self, c1: CTerm, c2: CTerm) -> bool:

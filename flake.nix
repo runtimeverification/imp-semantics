@@ -5,9 +5,9 @@
     nixpkgs.follows = "rv-nix-tools/nixpkgs";
 
     flake-utils.url = "github:numtide/flake-utils";
-    k-framework.url = "github:runtimeverification/k/v7.1.301";
+    k-framework.url = "github:runtimeverification/k/v7.1.318";
     k-framework.inputs.nixpkgs.follows = "nixpkgs";
-    uv2nix.url = "github:pyproject-nix/uv2nix/b6ed0901aec29583532abe65117b18d86a49b617";
+    uv2nix.url = "github:pyproject-nix/uv2nix/9d357f0d2ce6f5f35ec7959d7e704452352eb4da";
     # uv2nix requires a newer version of nixpkgs
     # therefore, we pin uv2nix specifically to a newer version of nixpkgs
     # until we replaced our stale version of nixpkgs with an upstream one as well
@@ -16,7 +16,7 @@
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
     uv2nix.inputs.nixpkgs.follows = "nixpkgs-unstable";
     # uv2nix.inputs.nixpkgs.follows = "nixpkgs";
-    pyproject-build-systems.url = "github:pyproject-nix/build-system-pkgs/dbfc0483b5952c6b86e36f8b3afeb9dde30ea4b5";
+    pyproject-build-systems.url = "github:pyproject-nix/build-system-pkgs/042904167604c681a090c07eb6967b4dd4dae88c";
     pyproject-build-systems = {
       inputs.nixpkgs.follows = "nixpkgs";
       inputs.uv2nix.follows = "uv2nix";
